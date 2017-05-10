@@ -3,6 +3,10 @@
 #include <cassert>
 #include <vrm/pp/for_each.hpp>
 
+/* Disadvantages:
+ * Is a macro.
+ * */
+
 #define MAKE_CASE(Index, FunctionT, Arg) \
   case Arg: \
     return FunctionT<Index>{}();

@@ -1,0 +1,34 @@
+#include "dispatch/simple_string_hash.hpp"
+#include "dispatch/naive_string_hash.hpp"
+#include "dispatch/string_dispatch.hpp"
+#include <iostream>
+
+#define ITERATIONS @(T)
+#define N @(N)
+
+template<size_t I>
+struct printer {
+  void operator()() const {
+    std::cout << I << "\n";
+  }
+};
+
+int main() {
+  constexpr auto table =
+#ifdef NAIVE
+    make_naive_string_hash<printer>
+#else
+    make_string_dispatch<simple_string_hash, printer>
+#endif
+  (
+    @( ',\n    '.join('STRING_LITERAL(\"{}\")'.format(x) for x in string_set) )
+  );
+
+  std::array<const char*, N> test_strings = {
+    @( ',\n    '.join('\"{}\"'.format(x) for x in string_set) )
+  };
+
+  for (int i = 0; i < ITERATIONS; ++i) {
+    table(test_strings[rand() % N]);
+  }
+}

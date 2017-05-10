@@ -4,6 +4,10 @@
 #include <utility>
 
 // TODO: take out constexpr lambdas if C++14
+/* Disadvantages:
+ * Limited to sequential integer lookup.
+ * Return type of the callbacks must be uniform.
+ * */
 
 template<template<size_t> typename F, size_t ...I>
 constexpr auto make_table_helper(std::index_sequence<I...>&&) {
@@ -21,4 +25,3 @@ template<template<size_t> typename F, size_t N>
 constexpr auto make_jump_table() {
   return make_table_helper<F>(std::make_index_sequence<N>{});
 }
-

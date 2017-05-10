@@ -2,26 +2,11 @@
 
 #include <tuple>
 
-#include "dispatch/int_hash.hpp"
+#include "dispatch/recursive_switch_table.hpp"
 #include "dispatch/string_literal.hpp"
 #include "dispatch/utilities.hpp"
 
 namespace sl = jk::string_literal;
-
-/* Naive
- * With a tuple you can retrieve a constexpr integer too
- * but this is O(n) in the size of the set--can we do better?
- * */
-template<template<size_t> typename F, typename StringSet, size_t ...I>
-constexpr auto make_string_map_naive_helper(StringSet&& string_set, std::index_sequence<I...>&&) {
-  return [&string_set](const char* input) {
-    ([&string_set, &input]() {
-      if (sl::equal(std::get<I>(string_set), input)) {
-        F<I>();
-      }
-    }(),...);
-  };
-}
 
 template<template<size_t> typename F, typename StringSet>
 constexpr auto make_string_map_naive(StringSet&& string_set) {
@@ -42,7 +27,11 @@ constexpr unsigned get_max_string_length(Strings&&...) {
 
 template<char ...Pack1, char ...Pack2>
 constexpr bool pack_compare(std::integer_sequence<char, Pack1...>&&, std::integer_sequence<char, Pack2...>&&) {
-  return ((Pack1 == Pack2) && ...);
+  if constexpr (sizeof...(Pack1) != sizeof...(Pack2)) {
+    return false;
+  } else {
+    return ((Pack1 == Pack2) && ...);
+  }
 }
 
 template<size_t J, typename Tuple, size_t ...K>
@@ -61,9 +50,10 @@ constexpr bool test_byte_positions_helper2(Tuple&& t, std::index_sequence<K...>&
 
 template<typename Tuple, size_t ...K>
 constexpr bool test_byte_positions_helper(Tuple&& t, std::index_sequence<K...>&&) {
-  return (test_byte_positions_helper2<K>(
-    t,
-    std::make_index_sequence<std::tuple_size<std::decay_t<Tuple>>::value>{}) && ...);
+  using DTuple = std::decay_t<Tuple>;
+  constexpr auto n_strings = std::tuple_size<DTuple>{};
+  return (test_byte_positions_helper2<K>(t,
+    std::make_index_sequence<n_strings>{}) && ...);
 }
 
 template<typename Positions, typename ...Strings>
@@ -75,10 +65,18 @@ constexpr bool test_byte_positions(std::index_sequence<I...>&& i, Strings&&... s
     return std::integer_sequence<char, std::decay_t<decltype(string)>::value().data()[I]...>{};
   };
 
+  // TODO: Shorten I... if the string is smaller
   constexpr auto candidate_strings = std::make_tuple(make_string(Strings{}, decltype(i){})...);
 
   return test_byte_positions_helper(candidate_strings,
     std::make_index_sequence<std::tuple_size<decltype(candidate_strings)>{}>{});
+}
+
+// Do this until a pass over 0 results in no changed entries.
+template<typename ...Strings, size_t ...I>
+constexpr auto find_byte_positions_helper(Strings&&...) {
+  // Try removing one entry from I
+  // If test_byte_positions succeeds, 
 }
 
 /* Step 1 (Finding good byte positions):
@@ -94,7 +92,8 @@ constexpr auto find_byte_positions(Strings&&...) {
 
   constexpr auto initial_positions = std::make_index_sequence<max_length>{};
 
-  static_assert(test_byte_positions(std::make_index_sequence<max_length>{}, Strings{}...));
+  // TODO Argh
+  // static_assert(test_byte_positions(std::make_index_sequence<max_length>{}, Strings{}...));
 
   // TODO optimize to get a smaller, faster hash
   return initial_positions;
@@ -161,7 +160,7 @@ struct compute_hash {
   // TODO: Add int hash to matching to sequential integers
   template<size_t ...I>
   static auto runtime_compute_helper(const char* keyword, const std::index_sequence<I...>&) {
-    return (hash_get(associative_values, keyword[I] + access_sequence<I>(alpha_increments)) + ...);
+    return (hash_get(associative_values, keyword[I] + access_sequence<I>(AlphaIncs{})) + ...);
   }
 
   auto operator()(const char* keyword) const {
@@ -175,7 +174,7 @@ struct compute_hash {
       + access_sequence<I>(alpha_increments)>(associative_values) + ...);
     */
     // TODO: hash access assoc. values
-    return ((StringLiteral::value().data()[I] + access_sequence<I>(alpha_increments)) + ...);
+    return ((StringLiteral::value().data()[I] + access_sequence<I>(AlphaIncs{})) + ...);
   }
 
   // Constexpr version
@@ -201,7 +200,7 @@ constexpr auto prepare_string_hash(Strings&&...) {
 template<template<size_t> typename F, typename ...Strings>
 struct string_dispatch {
   static constexpr auto string_hash = prepare_string_hash(Strings{}...);
-  static constexpr unsequenced_jump_table<F, string_hash.hash(Strings{})...> table;
+  static constexpr recursive_switch_table<F, string_hash.hash(Strings{})...> table;
 
   auto operator()(const char* value) const {
     return table(string_hash(value));
@@ -212,5 +211,4 @@ template<template<size_t> typename F, typename ...Strings>
 constexpr auto make_string_dispatch(Strings&&...) {
   return string_dispatch<F, Strings...>{};
 }
-
 

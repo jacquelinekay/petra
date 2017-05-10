@@ -4,6 +4,13 @@
 #include <utility>
 #include <iostream>
 
+/* Disadvantages:
+ * Linear lookup complexity at runtime due to fold expression.
+ * No return type from callbacks.
+ *
+ * Also, appears to be broken right now
+ * */
+
 // Given a set of any N integers at compile time,
 // make a mapping to [0, N)
 // map runtime integer in the original set to 

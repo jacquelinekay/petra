@@ -8,7 +8,8 @@
  */
 #include <iostream>
 
-#include "dispatch/string_hash.hpp"
+#include "dispatch/simple_string_hash.hpp"
+#include "dispatch/string_dispatch.hpp"
 
 template<size_t N>
 struct printer {
@@ -26,7 +27,7 @@ int main() {
   );
   static_assert(max == 4);
 
-  constexpr auto hash = prepare_string_hash(
+  constexpr auto hash = make_simple_string_hash(
     STRING_LITERAL("foo"),
     STRING_LITERAL("bar"),
     STRING_LITERAL("baz"),
@@ -39,7 +40,7 @@ int main() {
     std::cout << "hash(" << s << ") => " << hash(s) << "\n";
   }
 
-  constexpr auto string_dispatch_table = make_string_dispatch<printer>(
+  constexpr auto string_dispatch_table = make_string_dispatch<simple_string_hash, printer>(
     STRING_LITERAL("foo"),
     STRING_LITERAL("bar"),
     STRING_LITERAL("baz"),
