@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <utility>
 
 #include "dispatch/string_literal.hpp"
@@ -9,30 +10,31 @@ namespace sl = jk::string_literal;
 
 // Disadvantages:
 // Runtime complexity is O(n) where n is the length of the longest string key
-// Does not work with reverse words (for example "abcd" and "dcba" will collide)
+// collision on certain anagrams
 
 template<typename... Strings>
 struct simple_string_hash {
-  static constexpr auto positions = std::make_index_sequence<get_max_string_length(Strings{}...)>{};
-  static constexpr auto increments = std::make_index_sequence<decltype(positions)::size()>{};
-
-  template<size_t ...I>
-  static auto runtime_compute_helper(const char* keyword, const std::index_sequence<I...>&) {
-    return ((keyword[I] + access_sequence<I>(increments)) + ...);
-  }
+  static constexpr unsigned MaxLength = max_string_length(Strings{}...);
 
   auto operator()(const char* keyword) const {
-    return runtime_compute_helper(keyword, positions) + strlen(keyword);
+    unsigned total = strlen(keyword);
+    auto max = std::min(total, MaxLength);
+    for (unsigned i = 0; i < max; ++i) {
+      total += keyword[i] + i;
+    }
+    return total;
   }
 
   template<typename StringLiteral, size_t ...I>
   static constexpr auto compute_helper(StringLiteral&&, const std::index_sequence<I...>&) {
-    return ((StringLiteral::value().data()[I] + access_sequence<I>(increments)) + ...);
+    using S = std::decay_t<StringLiteral>;
+    return ((S::value().data()[I] + I) + ...);
   }
 
   template<typename StringLiteral>
-  static constexpr auto hash(StringLiteral&&) {
-    return compute_helper(StringLiteral{}, positions) + StringLiteral::value().size();
+  static constexpr auto hash(StringLiteral&& literal) {
+    using S = std::decay_t<StringLiteral>;
+    return compute_helper(literal, std::make_index_sequence<S::value().size()>{}) + S::value().size();
   }
 };
 

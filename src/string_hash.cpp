@@ -19,7 +19,7 @@ struct printer {
 };
 
 int main() {
-  constexpr unsigned max = get_max_string_length(
+  constexpr unsigned max = max_string_length(
     STRING_LITERAL("foo"),
     STRING_LITERAL("bar"),
     STRING_LITERAL("baz"),

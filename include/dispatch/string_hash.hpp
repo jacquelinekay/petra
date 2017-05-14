@@ -14,7 +14,7 @@ constexpr auto make_string_map_naive(StringSet&& string_set) {
 }
 
 template<typename ...Strings>
-constexpr unsigned get_max_string_length(Strings&&...) {
+constexpr unsigned max_string_length(Strings&&...) {
   return ([](auto max) {
     constexpr unsigned i = Strings::value().size();
     if constexpr (i > decltype(max){}) {
@@ -88,7 +88,7 @@ constexpr auto find_byte_positions(Strings&&...) {
   // Could start with (0, ..., maxlength)
   // then try removing an entry and testing the condition
   // terminate when we've concluded we can't remove any more
-  constexpr unsigned max_length = get_max_string_length(Strings{}...);
+  constexpr unsigned max_length = max_string_length(Strings{}...);
 
   constexpr auto initial_positions = std::make_index_sequence<max_length>{};
 

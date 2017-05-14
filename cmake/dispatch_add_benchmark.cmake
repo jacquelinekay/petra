@@ -13,7 +13,7 @@ function(dispatch_add_benchmark benchmark_name N M T output_prefix)
 
   add_executable(${full_name} ${output})
   add_dependencies(${full_name} ${full_name}_generated)
-  target_compile_options(${full_name} PUBLIC "-O0;${ARGN}")
+  target_compile_options(${full_name} PUBLIC "${ARGN}")
 
   add_custom_command(
     OUTPUT ${full_name}_run_
