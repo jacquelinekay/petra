@@ -12,10 +12,7 @@ struct recursive_switch_table {
   using IndexSequence = std::index_sequence<Sequence...>;
   template<size_t I, size_t Iterations>
   static auto apply(unsigned i) {
-    if constexpr (Iterations >= sizeof...(Sequence)) {
-      // error condition
-      assert(false);
-    } else {
+    if constexpr (Iterations < sizeof...(Sequence)) {
       switch(i) {
         case I:
           return F<map_to_index<I, Sequence...>()>{}();

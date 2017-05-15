@@ -9,7 +9,7 @@
 
 // Shared utilities for testing string hash
 // TODO: Clean up the globals into a shared context
-static constexpr size_t set_size = 8;
+static constexpr size_t set_size = 10;
 static std::array<int, set_size> results = {0};
 
 
@@ -22,13 +22,14 @@ constexpr auto example_constants() {
     STRING_LITERAL("arguments"),
     STRING_LITERAL("foobar"),
     STRING_LITERAL("abcd"),
-    STRING_LITERAL("foo")
-  // STRING_LITERAL("oof")
+    STRING_LITERAL("badc"),
+    STRING_LITERAL("foo"),
+    STRING_LITERAL("oof")
   );
 }
 
 constexpr auto example_test_strings() {
-  return std::array<const char*, 8>{
+  return std::array<const char*, set_size>{
     "asdf",
     "qwerty",
     "quux",
@@ -36,7 +37,9 @@ constexpr auto example_test_strings() {
     "arguments",
     "foobar",
     "abcd",
+    "badc",
     "foo",
+    "oof",
   };
 }
 
@@ -46,6 +49,7 @@ struct test {
     if (N < set_size) {
       std::cout << N << "\n";
       ++results[N];
+      assert(results[N] == 1);
     }
   }
 };

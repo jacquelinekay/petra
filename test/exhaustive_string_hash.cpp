@@ -1,7 +1,9 @@
 #include "string_hash_utilities.hpp"
 
 #include <algorithm>
+#include <cstring>
 #include <iostream>
+#include <set>
 
 // for ALL strings from size 0 to maxlength that are NOT
 // in the string set, assert that they don't collide
@@ -18,25 +20,37 @@ bool string_mutate(std::string& s, int index = 0) {
   return true;
 }
 
+template<size_t I>
+auto prepare_keyword_hashes(const std::array<const char*, I>& keywords) {
+  std::array<std::set<char>, I> sets;
+  for (int i = 0; i < I; ++i) {
+    for (int j = 0; j < strlen(keywords[i]); ++j) {
+      sets[i].insert(keywords[i][j]);
+    }
+  }
+  return sets;
+}
+
 template<typename Table, typename TestStrings, size_t... Length>
 void hash_all_strings(const Table& table, const TestStrings& test_strings, std::index_sequence<Length...>&&) {
-  ([&table, &test_strings]() {
+  constexpr auto N = set_size;
+  auto keyword_hashes = prepare_keyword_hashes<N>(test_strings);
+
+  ([&table, &test_strings, &keyword_hashes]() {
     std::string test(Length, 'a'); // TODO: initialization
     do {
-      for (const auto& key : test_strings) {
-        // Check if test is a permutation of key
-        std::string k(key);
-        if (k == test) {
-          continue;
+      bool skip = false;
+      for (int j = 0; j < N; ++j) {
+        const auto key = test_strings[j];
+        if (key == test.c_str()) {
+          // don't try to hash this string
+          skip = true;
         }
-        /*
-        std::reverse(k.begin(), k.end());
-        if (k == test) {
-          continue;
-        }
-        */
       }
-      table(test.c_str());
+      if (!skip) {
+        std::cout << test << "\n";
+        table(test.c_str());
+      }
     } while (string_mutate<Length>(test));
   }(), ...);
 }

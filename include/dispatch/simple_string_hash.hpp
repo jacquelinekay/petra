@@ -20,7 +20,7 @@ struct simple_string_hash {
     unsigned total = strlen(keyword);
     auto max = std::min(total, MaxLength);
     for (unsigned i = 0; i < max; ++i) {
-      total += keyword[i] + i;
+      total += keyword[i] * (i + 1);
     }
     return total;
   }
@@ -28,13 +28,14 @@ struct simple_string_hash {
   template<typename StringLiteral, size_t ...I>
   static constexpr auto compute_helper(StringLiteral&&, const std::index_sequence<I...>&) {
     using S = std::decay_t<StringLiteral>;
-    return ((S::value().data()[I] + I) + ...);
+    return ((S::value().data()[I] * (I + 1)) + ...);
   }
 
   template<typename StringLiteral>
   static constexpr auto hash(StringLiteral&& literal) {
     using S = std::decay_t<StringLiteral>;
-    return compute_helper(literal, std::make_index_sequence<S::value().size()>{}) + S::value().size();
+    return compute_helper(
+        literal, std::make_index_sequence<S::value().size()>{}) + S::value().size();
   }
 };
 
