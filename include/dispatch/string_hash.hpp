@@ -11,15 +11,6 @@
 
 namespace dispatch {
 
-  /*
-  namespace hash_type {
-    struct Empty{};
-    struct Unique{};
-    struct Collision{};
-  };
-
-  using hash_status = std::variant<hash_type::Empty, hash_type::Unique, hash_type::Collision>;
-  */
   enum struct hash_status {
     Empty,
     Unique,
@@ -85,25 +76,26 @@ namespace dispatch {
     }
 
     // TODO: This is wrong. Need to compare the resulting hash values across **all** subsets
-    template<std::size_t D, typename ...SubsetString>
-    static constexpr auto get_unique_hash_value() {
+    template<std::size_t D, typename ...SubsetString, typename Values>
+    static constexpr auto get_unique_hash_value(Values&& values) {
       constexpr std::size_t subset_size = sizeof...(SubsetString);
       if constexpr (subset_size == 0) {
-        return std::make_pair(hash_status::Empty, 0);
+        return std::make_pair(std::make_pair(hash_status::Empty, 0), std::index_sequence<>{});
       } else if constexpr (subset_size == 1) {
         // Maps directly to a unique string, so we can avoid hashing.
-        return std::make_pair(hash_status::Unique, 0);
+        return std::make_pair(std::make_pair(hash_status::Unique, 0), std::index_sequence<>{});
       } else {
         constexpr auto unique_sequence = make_unique_sequence(std::index_sequence<>{},
             std::index_sequence<distinct_hash(D, SubsetString::value().data())...>{});
+        // check that this the resulting values are disjoint from the current values
 
-        static_assert(unique_sequence.size() <= subset_size);
-        static_assert(unique_sequence.size() > 0);
-
-        if constexpr (unique_sequence.size() == subset_size) {
-          return std::make_pair(hash_status::Collision, D);
+        if constexpr (disjoint(unique_sequence, std::decay_t<decltype(values)>{})) {
+          // Make sure to return the new values
+          return std::make_pair(
+              std::make_pair(hash_status::Collision, D),
+              unique_sequence);
         } else {
-          return get_unique_hash_value<D + 1, SubsetString...>();
+          return get_unique_hash_value<D + 1, SubsetString...>(values);
         }
       }
     }
@@ -112,15 +104,25 @@ namespace dispatch {
       constexpr auto dict = initialize_dictionary();
       constexpr auto initial_keys = dict.first;
       constexpr auto initial_values = dict.second;
-      // for each set of strings, find a value which hashes them to unique values
-      constexpr auto second_level = [](auto&&... string_list) {
-        constexpr auto map_to_values = [](auto&&... strings) {
-          return get_unique_hash_value<0, std::decay_t<decltype(strings)>...>();
-        };
-        return std::make_tuple(std::apply(map_to_values, string_list)...);
-      };
 
-      constexpr auto second_level_results = std::apply(second_level, initial_values);
+      // for each set of strings, find a value which hashes them to unique values
+
+      constexpr auto second_level = [](auto&&... string_list) {
+        // result: pair((hash status, d), values)
+        constexpr auto unique_hash_values = [](auto&& result, auto strings) {
+          auto f = [result](auto&&... s) {
+            auto next = get_unique_hash_value<1, std::decay_t<decltype(s)>...>(result.second);
+            return std::pair(append(result.first, next.first), concatenate(result.second, next.second));
+          };
+          return std::apply(f, strings);
+        };
+
+        return fold_left(
+            unique_hash_values,
+            std::make_pair(std::make_tuple(), std::index_sequence<>{}),
+            string_list...);
+      };
+      constexpr auto second_level_results = std::apply(second_level, initial_values).first;
 
       constexpr auto filter_collisions = [second_level_results](auto&& seq, auto&& i) {
         constexpr size_t index = std::decay_t<decltype(i)>::value;
@@ -134,12 +136,6 @@ namespace dispatch {
       constexpr auto filtered_seq = fold_left(filter_collisions, std::index_sequence<>{},
           std::make_index_sequence<tuple_size(second_level_results)>{});
 
-      // for N in 0, set_size, if N not in values, append n to freelist
-      // Accumulate the taken values by applying the hash from ValuesTuple to Strings
-      //constexpr auto freelist = build_freelist(second_level_results, initial_values, filtered_seq);
-
-      // get an index_sequence of the hash results of applying
-      // distinct_hash(d, str) for d in ;
       constexpr auto do_hash = [second_level_results, initial_values, filtered_seq](auto&& result, auto&& i) {
         constexpr std::size_t index = std::decay_t<decltype(i)>::value;
         if constexpr (in_sequence(index, filtered_seq)) {
@@ -184,8 +180,14 @@ namespace dispatch {
       // initial values maps to unique values
       return make_recursive_switch_table(
         [initial_keys, unique_values](auto&& index) {
+        // TODO: Encapsulate switching here
           constexpr auto I = map_to_index<std::decay_t<decltype(index)>{}>(initial_keys);
-          return std::get<I>(unique_values);
+
+          if constexpr (I >= tuple_size(unique_values)) {
+            return std::make_pair(hash_status::Empty, 0);
+          } else {
+            return std::get<I>(unique_values);
+          }
         },
         initial_keys);
     }
@@ -199,17 +201,13 @@ namespace dispatch {
       // TODO 
       const auto& [status, d] = intermediate_hash(key);
       switch(status) {
-        case hash_status::Empty:
-          std::cout << "empty hash: " << set_size << "\n";
-          return set_size;
         case hash_status::Unique:
-          std::cout << "unique hash: " << d << "\n";
           return d;
         case hash_status::Collision:
-          std::cout << "collision at: " << d << "\n";
           return distinct_hash(d, str);  // TODO: len(V)?
+        case hash_status::Empty:
         default:
-          __builtin_unreachable();
+          return set_size;
       }
     }
 

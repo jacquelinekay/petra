@@ -258,11 +258,15 @@ constexpr auto append(Tuple&& t, Elem && e) {
 template<std::size_t I, typename T, typename Elem>
 constexpr auto insert_at(T&& t, Elem&& elem) {
   return std::tuple_cat(append(get_elements_until<I>(t), elem), get_elements_after<I>(t));
-  // return std::tuple_cat(get_elements_until<I>(t), std::make_tuple(elem), get_elements_after<I>(t));
 }
 
 constexpr auto concatenate() {
   return std::index_sequence<>{};
+}
+
+template<size_t... I>
+constexpr auto concatenate(std::index_sequence<I...> i) {
+  return i;
 }
 
 template<size_t... I, size_t... J>
@@ -288,4 +292,9 @@ constexpr auto difference(std::index_sequence<I...>, std::index_sequence<J...>) 
     }
   };
   return fold_left(f, std::index_sequence<>{}, std::integral_constant<std::size_t, I>{}...);
+}
+
+template<size_t... I, size_t... J>
+constexpr bool disjoint(std::index_sequence<I...>, std::index_sequence<J...>) {
+  return (!in_sequence(I, J...) && ...);
 }
