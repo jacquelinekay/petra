@@ -6,26 +6,27 @@
 
 #include <iostream>
 
-namespace sl = jk::string_literal;
+namespace sl = dispatch::string_literal;
 
-/* Naive
- * With a tuple you can retrieve a constexpr integer too
- * but this is O(n) in the size of the set--can we do better?
- * TODO: broken
- * */
-template<template<size_t> typename F, typename StringSet, size_t ...I>
-constexpr auto make_string_map_naive_helper(StringSet&& string_set, std::index_sequence<I...>&&) {
-  return [string_set = std::move(string_set)](const char* input) {
-    ([&string_set, &input]() {
-      if (sl::equal(std::get<I>(string_set), input)) {
-        F<I>{}();
+template<typename F, typename StringSet>
+struct naive_string_hash {
+  F callable;
+
+  template<std::size_t ...I>
+  void helper(std::index_sequence<I...>, const char* input) {
+    return ([this](const char* input) {
+      if (sl::equal(std::tuple_element_t<I, StringSet>{}, input)) {
+        callable(std::integral_constant<std::size_t, I>{});
       }
-    }(), ...);
-  };
-}
+    }(input), ...);
+  }
 
-template<template<size_t> typename F, typename... Strings>
-constexpr auto make_naive_string_hash(Strings&&... strings) {
-  return make_string_map_naive_helper<F>(std::make_tuple(strings...),
-      std::make_index_sequence<sizeof...(Strings)>{});
+  void operator()(const char* input) {
+    helper(std::make_index_sequence<std::tuple_size<StringSet>{}>{}, input);
+  }
+};
+
+template<typename F, typename... Strings>
+constexpr auto make_naive_string_hash(F&& callable, Strings&&... strings) {
+  return naive_string_hash<F, std::tuple<Strings...>>{callable};
 }

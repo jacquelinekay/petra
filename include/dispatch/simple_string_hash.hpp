@@ -6,7 +6,7 @@
 #include "dispatch/string_literal.hpp"
 #include "dispatch/utilities.hpp"
 
-namespace sl = jk::string_literal;
+namespace sl = dispatch::string_literal;
 
 // Disadvantages:
 // Runtime complexity is O(n) where n is the length of the longest string key
@@ -18,7 +18,7 @@ struct simple_string_hash {
 
   auto operator()(const char* keyword) const {
     unsigned total = strlen(keyword);
-    auto max = std::min(total, MaxLength);
+    const auto max = std::min(total, MaxLength);
     for (unsigned i = 0; i < max; ++i) {
       total += keyword[i] * (i + 1);
     }
@@ -26,7 +26,7 @@ struct simple_string_hash {
   }
 
   template<typename StringLiteral, size_t ...I>
-  static constexpr auto compute_helper(StringLiteral&&, const std::index_sequence<I...>&) {
+  static constexpr auto compute_helper(StringLiteral&&, std::index_sequence<I...>) {
     using S = std::decay_t<StringLiteral>;
     return ((S::value().data()[I] * (I + 1)) + ...);
   }

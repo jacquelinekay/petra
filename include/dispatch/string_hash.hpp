@@ -1,214 +1,227 @@
 #pragma once
 
 #include <tuple>
+#include <variant>
 
+#include "dispatch/dictionary.hpp"
 #include "dispatch/recursive_switch_table.hpp"
+#include "dispatch/string_dispatch.hpp"
 #include "dispatch/string_literal.hpp"
 #include "dispatch/utilities.hpp"
 
-namespace sl = jk::string_literal;
+namespace dispatch {
 
-template<template<size_t> typename F, typename StringSet>
-constexpr auto make_string_map_naive(StringSet&& string_set) {
-  return make_string_map_naive_helper(string_set, std::make_index_sequence<std::tuple_size<StringSet>{}>{});
-}
-
-template<typename ...Strings>
-constexpr unsigned max_string_length(Strings&&...) {
-  return ([](auto max) {
-    constexpr unsigned i = Strings::value().size();
-    if constexpr (i > decltype(max){}) {
-      return i;
-    } else {
-      return max;
-    }
-  }(std::integral_constant<unsigned, 0>{}), ...);
-}
-
-template<char ...Pack1, char ...Pack2>
-constexpr bool pack_compare(std::integer_sequence<char, Pack1...>&&, std::integer_sequence<char, Pack2...>&&) {
-  if constexpr (sizeof...(Pack1) != sizeof...(Pack2)) {
-    return false;
-  } else {
-    return ((Pack1 == Pack2) && ...);
-  }
-}
-
-template<size_t J, typename Tuple, size_t ...K>
-constexpr bool test_byte_positions_helper2(Tuple&& t, std::index_sequence<K...>&&) {
-  using DTuple = std::decay_t<Tuple>;
-  return ([&t](auto&& x) {
-      if constexpr (J == K) {
-        return x;
-      } else if constexpr (pack_compare(std::tuple_element_t<J, DTuple>{}, std::tuple_element_t<K, DTuple>{})) {
-        return std::false_type{};
-      } else {
-        return x;
-      }
-    }(std::true_type{}), ...);
-}
-
-template<typename Tuple, size_t ...K>
-constexpr bool test_byte_positions_helper(Tuple&& t, std::index_sequence<K...>&&) {
-  using DTuple = std::decay_t<Tuple>;
-  constexpr auto n_strings = std::tuple_size<DTuple>{};
-  return (test_byte_positions_helper2<K>(t,
-    std::make_index_sequence<n_strings>{}) && ...);
-}
-
-template<typename Positions, typename ...Strings>
-constexpr bool test_byte_positions(Positions&&, Strings&&...);
-
-template<size_t ...I, typename ...Strings>
-constexpr bool test_byte_positions(std::index_sequence<I...>&& i, Strings&&... strings) {
-  constexpr auto make_string = [](auto&& string, std::index_sequence<I...>&&) {
-    return std::integer_sequence<char, std::decay_t<decltype(string)>::value().data()[I]...>{};
+  /*
+  namespace hash_type {
+    struct Empty{};
+    struct Unique{};
+    struct Collision{};
   };
 
-  // TODO: Shorten I... if the string is smaller
-  constexpr auto candidate_strings = std::make_tuple(make_string(Strings{}, decltype(i){})...);
+  using hash_status = std::variant<hash_type::Empty, hash_type::Unique, hash_type::Collision>;
+  */
+  enum struct hash_status {
+    Empty,
+    Unique,
+    Collision
+  };
 
-  return test_byte_positions_helper(candidate_strings,
-    std::make_index_sequence<std::tuple_size<decltype(candidate_strings)>{}>{});
-}
+  template<auto Val>
+  struct Constant {
+    static constexpr auto value = Val;
+  };
 
-// Do this until a pass over 0 results in no changed entries.
-template<typename ...Strings, size_t ...I>
-constexpr auto find_byte_positions_helper(Strings&&...) {
-  // Try removing one entry from I
-  // If test_byte_positions succeeds, 
-}
+  template<typename ...Strings>
+  struct MinimalHash {
+    // TODO: use enable_if when the string set has 4 or fewer words
+    static constexpr std::size_t set_size = sizeof...(Strings);
+    static_assert(set_size > 4);
 
-/* Step 1 (Finding good byte positions):
- * Find a set Pos, as small as possible, such that all tuples
- * (keyword[i] : i in Pos) are different.
- */
-template<typename ...Strings>
-constexpr auto find_byte_positions(Strings&&...) {
-  // Could start with (0, ..., maxlength)
-  // then try removing an entry and testing the condition
-  // terminate when we've concluded we can't remove any more
-  constexpr unsigned max_length = max_string_length(Strings{}...);
+    // TODO: Tune this seed at compile time?
+    static constexpr inline std::size_t distinct_offset = 0x01000193;
 
-  constexpr auto initial_positions = std::make_index_sequence<max_length>{};
+    static constexpr std::size_t distinct_hash_helper(std::size_t d, const char* s) {
+      if (*s == 0) {
+        return d;
+      }
+      if (d == 0) {
+        d = distinct_offset;
+      }
+      d = ((d * distinct_offset) ^ (static_cast<std::size_t>(*s))) & 0xffffffff;
+      return distinct_hash_helper(d, s + 1);
+    }
 
-  // TODO Argh
-  // static_assert(test_byte_positions(std::make_index_sequence<max_length>{}, Strings{}...));
+    static constexpr std::size_t distinct_hash(std::size_t d, const char* s, std::size_t size = set_size) {
+      if (!s) {
+        // TODO
+        return d;
+      }
+      return distinct_hash_helper(d, s) % size;
+    }
 
-  // TODO optimize to get a smaller, faster hash
-  return initial_positions;
-}
+    static constexpr auto initialize_dictionary() {
+      constexpr auto unique_sequence = make_unique_sequence(std::index_sequence<>{},
+              std::index_sequence<distinct_hash(0, Strings::value().data())...>{});
 
+      constexpr auto empty_tuple = [](auto t) {
+        return append(t, std::make_tuple());
+      };
 
-constexpr bool test_alpha_increments() {
-  // TODO
-  return true;
-}
+      constexpr std::size_t n_uniques = decltype(unique_sequence)::size();
+      static_assert(n_uniques > 0);
+      constexpr auto initial_tuple = times<n_uniques - 1>(
+          empty_tuple, std::make_tuple(std::make_tuple()));
 
-/* Step 2 (Finding good alpha increments):
- * Find nonnegative integers alpha_inc[i], as many of them as possible being
- * zero, and the others being as small as possible, such that all multisets
- * {keyword[i] + alpha_inc[i] : i in Pos} are different.
- */
-template<size_t ...I, typename ...Strings>
-constexpr auto find_alpha_increments(const std::index_sequence<I...>& positions, Strings&&...) {
-  // initialize alpha_inc to all zeros, same size as Pos
-  constexpr auto alpha_inc = std::make_index_sequence<sizeof...(I)>{};
-  // make the multisets {keyword[i] + alpha_inc[i] : i in Pos}
-  // adjust until smallest size found
-  // TODO optimize!
-  return alpha_inc;
-}
+      static_assert(tuple_size(initial_tuple) > 0);
+      static_assert(tuple_size(initial_tuple) == n_uniques);
 
-constexpr bool test_associative_values() {
-  // TODO run the hash on all strings and check that the results are not equal
-  return true;
-}
+      constexpr auto accumulate_strings = [unique_sequence](auto&& t, auto&& str) {
+        constexpr auto value = std::decay_t<decltype(str)>::value().data();
+        constexpr auto hashed_value = distinct_hash(0, value);
+        constexpr std::size_t index = map_to_index<hashed_value>(unique_sequence);
+        return insert_at<index>(t, append(std::get<index>(t), str));
+      };
+      return std::make_pair(unique_sequence, fold_left(accumulate_strings, initial_tuple, Strings{}...));
+    }
 
-/* Step 3 (Finding good asso_values):
- * Find asso_values[c] such that all hash (keyword) are different.
- */
-template<typename Positions, typename AlphaIncs, typename ...Strings>
-constexpr auto find_associative_values(Positions&&, AlphaIncs&&, Strings&&...) {
-  // how to build and **represent** asso_values?
-  // key set: all possible indices that result from keyword[i] + alpha_inc[i] : i in Pos
-  // run through the hash function and adjust until correct
-  // TODO
-  // I think mapping keys directly to the values might just work?
-  // will just mapping keys directly to values will work but be pessimistic?
-  // so right now associative_values is literally nothing
-  return 0;
-}
+    // TODO: This is wrong. Need to compare the resulting hash values across **all** subsets
+    template<std::size_t D, typename ...SubsetString>
+    static constexpr auto get_unique_hash_value() {
+      constexpr std::size_t subset_size = sizeof...(SubsetString);
+      if constexpr (subset_size == 0) {
+        return std::make_pair(hash_status::Empty, 0);
+      } else if constexpr (subset_size == 1) {
+        // Maps directly to a unique string, so we can avoid hashing.
+        return std::make_pair(hash_status::Unique, 0);
+      } else {
+        constexpr auto unique_sequence = make_unique_sequence(std::index_sequence<>{},
+            std::index_sequence<distinct_hash(D, SubsetString::value().data())...>{});
 
-template<typename AssocValues>
-constexpr auto hash_get(AssocValues&&, unsigned i) {
-  return i;
-}
+        static_assert(unique_sequence.size() <= subset_size);
+        static_assert(unique_sequence.size() > 0);
 
-template<typename AssocValues, auto I>
-constexpr auto chash_get(const AssocValues&) {
-  return I;
-}
+        if constexpr (unique_sequence.size() == subset_size) {
+          return std::make_pair(hash_status::Collision, D);
+        } else {
+          return get_unique_hash_value<D + 1, SubsetString...>();
+        }
+      }
+    }
 
-/*
- * from GNU gperf (https://github.com/yakaz/gperf/blob/output-javascript/src/search.cc):
- *  hash (keyword) = sum (asso_values[keyword[i] + alpha_inc[i]] : i in Pos)
- *                       + len (keyword)
- */
-template<typename Positions, typename AlphaIncs, typename AssocValues>
-struct compute_hash {
-  // TODO: Add int hash to matching to sequential integers
-  template<size_t ...I>
-  static auto runtime_compute_helper(const char* keyword, const std::index_sequence<I...>&) {
-    return (hash_get(associative_values, keyword[I] + access_sequence<I>(AlphaIncs{})) + ...);
+    static constexpr auto construct_hash() {
+      constexpr auto dict = initialize_dictionary();
+      constexpr auto initial_keys = dict.first;
+      constexpr auto initial_values = dict.second;
+      // for each set of strings, find a value which hashes them to unique values
+      constexpr auto second_level = [](auto&&... string_list) {
+        constexpr auto map_to_values = [](auto&&... strings) {
+          return get_unique_hash_value<0, std::decay_t<decltype(strings)>...>();
+        };
+        return std::make_tuple(std::apply(map_to_values, string_list)...);
+      };
+
+      constexpr auto second_level_results = std::apply(second_level, initial_values);
+
+      constexpr auto filter_collisions = [second_level_results](auto&& seq, auto&& i) {
+        constexpr size_t index = std::decay_t<decltype(i)>::value;
+        constexpr auto status = std::get<index>(second_level_results).first;
+        if constexpr (status == hash_status::Collision) {
+          return append<index>(seq);
+        } else {
+          return seq;
+        }
+      };
+      constexpr auto filtered_seq = fold_left(filter_collisions, std::index_sequence<>{},
+          std::make_index_sequence<tuple_size(second_level_results)>{});
+
+      // for N in 0, set_size, if N not in values, append n to freelist
+      // Accumulate the taken values by applying the hash from ValuesTuple to Strings
+      //constexpr auto freelist = build_freelist(second_level_results, initial_values, filtered_seq);
+
+      // get an index_sequence of the hash results of applying
+      // distinct_hash(d, str) for d in ;
+      constexpr auto do_hash = [second_level_results, initial_values, filtered_seq](auto&& result, auto&& i) {
+        constexpr std::size_t index = std::decay_t<decltype(i)>::value;
+        if constexpr (in_sequence(index, filtered_seq)) {
+          constexpr auto f = [second_level_results](auto&&... strs) {
+            return std::index_sequence<
+              distinct_hash(std::get<index>(second_level_results).second,
+                  std::decay_t<decltype(strs)>::value().data())...
+            >{};
+          };
+          return concatenate(result, std::apply(f, std::get<index>(initial_values)));
+        } else {
+          return result;
+        }
+      };
+      constexpr auto hashed_values = fold_left(do_hash, std::index_sequence<>{},
+          std::make_index_sequence<initial_keys.size()>{});
+
+      constexpr auto freelist = difference(std::make_index_sequence<set_size>{}, hashed_values);
+
+      constexpr auto assign_from_freelist = [second_level_results](auto&& result_freelist, auto&& i) {
+        constexpr size_t index = std::decay_t<decltype(i)>::value;
+        constexpr auto status = std::get<index>(second_level_results).first;
+
+        if constexpr (status == hash_status::Unique) {
+          auto result = result_freelist.first;
+          auto cur_freelist = result_freelist.second;
+          auto freelist_pair = pop_front(cur_freelist);
+          return std::make_pair(
+              insert_at<index>(result, std::make_pair(status, freelist_pair.first)), freelist_pair.second);
+        } else {
+          return result_freelist;
+        }
+      };
+
+      constexpr auto assign_result = fold_left(
+          assign_from_freelist,
+          std::make_pair(second_level_results, freelist),
+          std::make_index_sequence<tuple_size(second_level_results)>{});
+      constexpr auto unique_values = assign_result.first;
+
+      // TODO: Prune Empty values
+      // initial values maps to unique values
+      return make_recursive_switch_table(
+        [initial_keys, unique_values](auto&& index) {
+          constexpr auto I = map_to_index<std::decay_t<decltype(index)>{}>(initial_keys);
+          return std::get<I>(unique_values);
+        },
+        initial_keys);
+    }
+
+    static constexpr auto intermediate_hash = construct_hash();
+
+    static constexpr auto hash(const char* str) {
+      // TODO: len(G) != set_size, so this differs from the Python impl
+      std::size_t key = distinct_hash(0, str);
+      std::cout << "hashed to key: " << key << "\n";
+      // TODO 
+      const auto& [status, d] = intermediate_hash(key);
+      switch(status) {
+        case hash_status::Empty:
+          std::cout << "empty hash: " << set_size << "\n";
+          return set_size;
+        case hash_status::Unique:
+          std::cout << "unique hash: " << d << "\n";
+          return d;
+        case hash_status::Collision:
+          std::cout << "collision at: " << d << "\n";
+          return distinct_hash(d, str);  // TODO: len(V)?
+        default:
+          __builtin_unreachable();
+      }
+    }
+
+    constexpr MinimalHash(Strings&&... strings) {
+    }
+  };
+
+  
+
+  template<typename... Args>
+  static constexpr auto make_minimal_hash(Args&&... args) {
+    return MinimalHash(string_literal::string_constant(args, utilities::length(args))...);
   }
 
-  auto operator()(const char* keyword) const {
-    return runtime_compute_helper(keyword, positions) + strlen(keyword);
-  }
-
-  template<typename StringLiteral, size_t ...I>
-  static constexpr auto compute_helper(StringLiteral&&, const std::index_sequence<I...>&) {
-    /*
-    return (chash_get<StringLiteral::value().data()[I]
-      + access_sequence<I>(alpha_increments)>(associative_values) + ...);
-    */
-    // TODO: hash access assoc. values
-    return ((StringLiteral::value().data()[I] + access_sequence<I>(AlphaIncs{})) + ...);
-  }
-
-  // Constexpr version
-  template<typename StringLiteral>
-  static constexpr auto hash(StringLiteral&&) {
-    return compute_helper(StringLiteral{}, positions) + StringLiteral::value().size();
-  }
-
-  static constexpr Positions positions;
-  static constexpr AlphaIncs alpha_increments;
-  static constexpr AssocValues associative_values;
-};
-
-template<typename ...Strings>
-constexpr auto prepare_string_hash(Strings&&...) {
-  constexpr auto byte_positions = find_byte_positions(Strings{}...);
-  constexpr auto alpha_increments = find_alpha_increments(byte_positions, Strings{}...);
-  constexpr auto associative_values = find_associative_values(byte_positions, alpha_increments, Strings{}...);
-
-  return compute_hash<decltype(byte_positions), decltype(alpha_increments), decltype(associative_values)>{};
-}
-
-template<template<size_t> typename F, typename ...Strings>
-struct string_dispatch {
-  static constexpr auto string_hash = prepare_string_hash(Strings{}...);
-  static constexpr recursive_switch_table<F, string_hash.hash(Strings{})...> table;
-
-  auto operator()(const char* value) const {
-    return table(string_hash(value));
-  }
-};
-
-template<template<size_t> typename F, typename ...Strings>
-constexpr auto make_string_dispatch(Strings&&...) {
-  return string_dispatch<F, Strings...>{};
-}
-
+}  // namespace dispatch

@@ -10,8 +10,6 @@
 // Shared utilities for testing string hash
 // TODO: Clean up the globals into a shared context
 static constexpr size_t set_size = 10;
-static std::array<int, set_size> results = {0};
-
 
 constexpr auto example_constants() {
   return std::make_tuple(
@@ -43,20 +41,22 @@ constexpr auto example_test_strings() {
   };
 }
 
-template<size_t N>
 struct test {
-  void operator()() const {
+  template<std::size_t N>
+  void operator()(std::integral_constant<std::size_t, N>) {
     if (N < set_size) {
       std::cout << N << "\n";
       ++results[N];
       assert(results[N] == 1);
     }
   }
+  std::array<int, set_size> results = {0};
 };
 
 template<typename T, size_t... I>
 constexpr auto dispatch_table_from_tuple_helper(const T& strings, std::index_sequence<I...>&&) {
   return make_string_dispatch<simple_string_hash, test>(
+    test{},
     std::tuple_element_t<I, T>{}...
   );
 }

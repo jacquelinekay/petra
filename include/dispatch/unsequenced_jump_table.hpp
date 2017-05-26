@@ -16,19 +16,20 @@
 // map runtime integer in the original set to 
 // TODO: make numeric type generic
 
-template<template<size_t> typename F, size_t ...Sequence>
+template<typename F, std::size_t ...Sequence>
 struct unsequenced_jump_table {
-  template<size_t ...I>
-  static auto helper(unsigned i, std::index_sequence<I...>&&) {
-    ([&i]() {
+  F callable;
+
+  template<std::size_t ...I>
+  void helper(std::size_t i, std::index_sequence<I...>&&) {
+    ([&i, this]() {
       if (i == Sequence) {
-        F<I>{}();
+        callable(std::integral_constant<std::size_t, I>{});
       }
     }(), ...);
   }
 
-  auto operator()(unsigned i) const {
-    return helper(i, std::make_index_sequence<sizeof...(Sequence)>{});
+  void operator()(std::size_t i) {
+    helper(i, std::make_index_sequence<sizeof...(Sequence)>{});
   }
 };
-

@@ -3,15 +3,11 @@
 #include <iostream>
 
 int main() {
-  for (const auto result : results) {
-    assert(result == 0);
-  }
-
   constexpr auto string_constants = example_constants();
 
   auto test_strings = example_test_strings();
 
-  constexpr auto string_dispatch_table = dispatch_table_from_tuple(string_constants);
+  auto string_dispatch_table = dispatch_table_from_tuple(string_constants);
 
   static_assert(unique_hashes(
       string_dispatch_table,
@@ -27,10 +23,6 @@ int main() {
     std::cout << string_dispatch_table.string_hash(s) << "\n";
     std::cout << "Index of " << s << ": ";
     string_dispatch_table(s);
-  }
-
-  for (const auto result : results) {
-    assert(result == 1);
   }
 
   std::cout << "All string hash tests passed.\n";

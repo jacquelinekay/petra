@@ -6,9 +6,9 @@
 #define ITERATIONS @(T)
 #define N @(N)
 
-template<size_t I>
 struct printer {
-  void operator()() const {
+  template<size_t I>
+  void operator()(std::integral_constant<unsigned, I>) const {
     std::cout << I << "\n";
   }
 };
@@ -16,11 +16,12 @@ struct printer {
 int main() {
   constexpr auto table =
 #ifdef NAIVE
-    make_naive_string_hash<printer>
+    make_naive_string_hash
 #else
-    make_string_dispatch<simple_string_hash, printer>
+    make_string_dispatch<simple_string_hash>
 #endif
   (
+    printer{},
     @( ',\n    '.join('STRING_LITERAL(\"{}\")'.format(x) for x in string_set) )
   );
 

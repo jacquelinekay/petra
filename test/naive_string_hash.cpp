@@ -5,21 +5,18 @@
 
 static constexpr size_t set_size = 9;
 
-static std::array<int, set_size> results = {0};
 
-template<size_t N>
 struct test {
-  void operator()() const {
+  template<std::size_t N>
+  void operator()(std::integral_constant<std::size_t, N>) {
     std::cout << N << "\n";
     ++results[N];
+    assert(results[N] == 1);
   }
+  std::array<int, set_size> results = {0};
 };
 
 int main() {
-  for (const auto result : results) {
-    assert(result == 0);
-  }
-
   std::array<const char*, set_size > test_strings = {
     "asdf",
     "qwerty",
@@ -33,7 +30,8 @@ int main() {
     // "oof"
   };
 
-  constexpr auto string_dispatch_table = make_naive_string_hash<test>(
+  auto string_dispatch_table = make_naive_string_hash(
+    test{},
     STRING_LITERAL("asdf"),
     STRING_LITERAL("qwerty"),
     STRING_LITERAL("quux"),
@@ -48,11 +46,6 @@ int main() {
 
   for (const auto& s : test_strings) {
     string_dispatch_table(s);
-  }
-
-
-  for (const auto result : results) {
-    assert(result == 1);
   }
 
   std::cout << "All string hash tests passed.\n";

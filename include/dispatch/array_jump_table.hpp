@@ -8,6 +8,7 @@
  * Limited to sequential integer lookup.
  * Return type of the callbacks must be uniform.
  * */
+// TODO: Variadic args interface?
 
 template<template<size_t> typename F, size_t ...I>
 constexpr auto make_table_helper(std::index_sequence<I...>&&) {

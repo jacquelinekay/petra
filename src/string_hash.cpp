@@ -1,37 +1,51 @@
-/* given a set of constexpr strings,
- * map those strings to integers
- *
- * build a function that accepts const char*'s and retrieves the associated integer
- *
- * compare to the performance of a std::unordered_map<string, int>
- *
- */
 #include <iostream>
+#include "dispatch/string_hash.hpp"
 
-#include "dispatch/simple_string_hash.hpp"
-#include "dispatch/string_dispatch.hpp"
+#include "dispatch/utilities.hpp"
 
-template<size_t N>
 struct printer {
-  void operator()() const {
+  template<std::size_t N>
+  void operator()(std::integral_constant<std::size_t, N>) const {
     std::cout << N << "\n";
   }
 };
 
 int main() {
-  constexpr unsigned max = max_string_length(
-    STRING_LITERAL("foo"),
-    STRING_LITERAL("bar"),
-    STRING_LITERAL("baz"),
-    STRING_LITERAL("quux")
-  );
-  static_assert(max == 4);
+  constexpr dispatch::MinimalHash x(
+      STRING_LITERAL("hello"),
+      STRING_LITERAL("goodbye"),
+      STRING_LITERAL("dog"),
+      STRING_LITERAL("fish"),
+      STRING_LITERAL("cat"));
+  using Hash = decltype(x);
 
-  constexpr auto hash = make_simple_string_hash(
-    STRING_LITERAL("foo"),
-    STRING_LITERAL("bar"),
-    STRING_LITERAL("baz"),
-    STRING_LITERAL("quux")
+  std::cout << "hash(hello) => " << Hash::hash("hello") << "\n";
+  std::cout << "hash(goodbye) => " << Hash::hash("goodbye") << "\n";
+  std::cout << "hash(cat) => " << Hash::hash("cat") << "\n";
+  std::cout << "hash(dog) => " << Hash::hash("dog") << "\n";
+  std::cout << "hash(fish) => " << Hash::hash("fish") << "\n";
+  /*
+  std::cout << "hash(dog) => " << Hash::hash("dog") << "\n";
+  constexpr auto dict = Hash::initialize_dictionary();
+
+  constexpr auto print_tuple = [](auto&&... args) {
+    (std::cout << ... << std::decay_t<decltype(args)>::value().data()) << "\n";
+  };
+
+  std::cout << "keys size: " << dict.first.size() << "\n";
+  std::cout << "values size: " << tuple_size(dict.second) << "\n";
+  std::apply(print_tuple, std::get<0>(dict.second));
+  std::apply(print_tuple, std::get<1>(dict.second));
+  std::apply(print_tuple, std::get<2>(dict.second));
+  */
+
+  // constexpr auto hash = dispatch::make_minimal_hash("foo", "bar");
+  /*
+  constexpr auto hash = make_string_hash(
+    "foo",
+    "bar",
+    "baz",
+    "quux"
   );
 
   std::array<const char*, 4> string_set = {"foo", "bar", "baz", "quux"};
@@ -39,15 +53,5 @@ int main() {
   for (const auto& s : string_set) {
     std::cout << "hash(" << s << ") => " << hash(s) << "\n";
   }
-
-  constexpr auto string_dispatch_table = make_string_dispatch<simple_string_hash, printer>(
-    STRING_LITERAL("foo"),
-    STRING_LITERAL("bar"),
-    STRING_LITERAL("baz"),
-    STRING_LITERAL("quux")
-  );
-
-  for (const auto& s : string_set) {
-    string_dispatch_table(s);
-  }
+  */
 }
