@@ -16,11 +16,11 @@ if(BUILD_BENCHMARKS)
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/extlibs/vrm_cmake/cmake/")
     include(vrm_cmake)
 
-    add_executable(switch_table src/switch_table.cpp)
-    target_include_directories(switch_table PUBLIC ${VRM_PP_INC_DIR})
+    add_executable(macro_switch_table src/macro_switch_table.cpp)
+    target_include_directories(macro_switch_table PUBLIC ${VRM_PP_INC_DIR})
 endif()
 
-dispatch_add_executable(recursive_switch_table src/recursive_switch_table.cpp)
+dispatch_add_executable(switch_table src/switch_table.cpp)
 
 dispatch_add_executable(string_hash src/string_hash.cpp)
 dispatch_add_executable(simple_string_hash src/simple_string_hash.cpp)
@@ -28,7 +28,7 @@ dispatch_add_executable(simple_string_hash src/simple_string_hash.cpp)
 dispatch_add_executable(simple_string_hash_test test/simple_string_hash.cpp)
 dispatch_add_executable(exhaustive_string_hash_test test/exhaustive_string_hash.cpp)
 dispatch_add_executable(naive_string_hash_test test/naive_string_hash.cpp)
-dispatch_add_executable(recursive_switch_table_test test/recursive_switch_table.cpp)
+dispatch_add_executable(switch_table_test test/switch_table.cpp)
 dispatch_add_executable(unsequenced_jump_table_test test/unsequenced_jump_table.cpp)
 
 # Generate benchmarks

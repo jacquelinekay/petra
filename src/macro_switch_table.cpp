@@ -1,10 +1,11 @@
+// Macro based approach
 #include <iostream>
 
-#include "dispatch/switch_table.hpp"
+#include "dispatch/switch_macro.hpp"
 
+template<size_t N>
 struct printer {
-  template<std::size_t N>
-  void operator()(std::integral_constant<std::size_t, N>) const {
+  void operator()() const {
     std::cout << N << "\n";
   }
 };
@@ -15,6 +16,6 @@ int main(int argc, char** argv) {
   }
   const int index = atoi(argv[1]);
 
-  auto switch_table = dispatch::make_switch_table<100, 42, 8, 0>(printer{});
+  auto switch_table = MAKE_SWITCH_JUMP_TABLE(printer, 100, 42, 8, 0);
   switch_table(index);
 }

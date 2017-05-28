@@ -1,15 +1,14 @@
 #pragma once
 
-#include "dispatch/recursive_switch_table.hpp"
+#include "dispatch/switch_table.hpp"
 
 namespace dispatch {
-// TODO: just merge with simple string hash
 
 template<template<typename...> class Hash, typename F, typename ...Strings>
 struct string_dispatch {
   string_dispatch(F&& callable) : table{callable} { }
 
-  recursive_switch_table<F, Hash<Strings...>::hash(Strings{})...> table;
+  switch_table<F, Hash<Strings...>::hash(Strings{})...> table;
 
   static constexpr auto string_hash = Hash<Strings...>{};
 

@@ -1,4 +1,4 @@
-#include "dispatch/recursive_switch_table.hpp"
+#include "dispatch/switch_table.hpp"
 
 #include <array>
 #include <iostream>
@@ -16,15 +16,6 @@ struct test {
   std::array<int, TestSet::size()> results = {{0}};
 };
 
-template<typename F, typename T>
-struct switch_table_wrapper;
-
-template<typename F, size_t ...I>
-struct switch_table_wrapper<F, std::index_sequence<I...>> : dispatch::recursive_switch_table<F, I...> {
-  switch_table_wrapper(F&& f) : dispatch::recursive_switch_table<F, I...>{f} {
-  }
-};
-
 template<typename T, typename S>
 void run_test(S&& table) {
   return run_test(T{}, table);
@@ -36,6 +27,6 @@ void run_test(std::index_sequence<I...>, S&& table) {
 }
 
 int main() {
-  run_test<TestSet>(switch_table_wrapper<test, TestSet>(test{}));
+  run_test<TestSet>(dispatch::make_switch_table(test{}, TestSet{}));
 }
 

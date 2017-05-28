@@ -4,6 +4,7 @@
 
 #include "dispatch/utilities.hpp"
 #include "dispatch/utilities/sequence.hpp"
+
 /* Disadvantages:
  * Recursive template instantiation limit.
  * */
@@ -30,7 +31,7 @@ namespace dispatch {
 
 
 template<typename F, std::size_t ...Sequence>
-struct recursive_switch_table {
+struct switch_table {
   F callable;
 
   using IndexSequence = std::index_sequence<Sequence...>;
@@ -57,15 +58,15 @@ struct recursive_switch_table {
   }
 };
 
-template< std::size_t ...Sequence, typename F>
-static constexpr auto make_recursive_switch_table(F&& f) {
-  return recursive_switch_table<F, Sequence...>{f};
+template<std::size_t ...Sequence, typename F>
+static constexpr decltype(auto) make_switch_table(F&& f) {
+  return switch_table<F, Sequence...>{f};
 }
 
-template< std::size_t ...Sequence, typename F>
-static constexpr auto make_recursive_switch_table(
+template<std::size_t ...Sequence, typename F>
+static constexpr decltype(auto) make_switch_table(
     F&& f, std::index_sequence<Sequence...>) {
-  return recursive_switch_table<F, Sequence...>{f};
+  return switch_table<F, Sequence...>{f};
 }
 
 #undef DISPATCH_RECURSIVE_SWITCH_TABLE_APPLY
