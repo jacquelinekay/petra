@@ -105,7 +105,7 @@ namespace detail {
     }
   }
 
-  template<typename ...Inputs>
+  template<typename IntermediateHash, typename ...Inputs>
   static constexpr auto construct_hash() {
     constexpr std::size_t set_size = sizeof...(Inputs);
     constexpr auto dict = initialize_dictionary<Inputs...>();
