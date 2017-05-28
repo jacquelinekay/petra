@@ -5,16 +5,16 @@
 
 #include <cstring>
 
-#include "utilities.hpp"
+
+#include "utilities/fold.hpp"
+#include "utilities/sequence.hpp"
+#include "utilities/tuple.hpp"
 
 namespace dispatch {
-namespace string_literal {
 
-// Heavily inspired by mpark and ubsan
-// For some reason, auto and decltype(auto) crash Clang
 #define CONSTANT(...) \
   struct { \
-    static constexpr dispatch::string_literal::string_literal value() { return __VA_ARGS__; } \
+    static constexpr dispatch::string_literal value() { return __VA_ARGS__; } \
   } \
 
 struct string_literal {
@@ -29,7 +29,7 @@ private:
 
 template<auto V>
 struct string_constant {
-  static constexpr auto value() {
+  static constexpr decltype(auto) value() {
     return string_literal(V, utilities::length(V));
   };
 };
@@ -37,19 +37,19 @@ struct string_constant {
 // what if this just was the string literal struct
 #define STRING_TYPE_DECL(StructName, ...) \
   struct StructName { \
-    static constexpr dispatch::string_literal::string_literal value() { \
-      return dispatch::string_literal::string_literal(__VA_ARGS__, sizeof(__VA_ARGS__) - 1); \
+    static constexpr dispatch::string_literal value() { \
+      return dispatch::string_literal(__VA_ARGS__, sizeof(__VA_ARGS__) - 1); \
     } \
   };
 
 #define STRING_LITERAL(value) \
   []() { \
-    using Str = CONSTANT(dispatch::string_literal::string_literal{value, sizeof(value) - 1}); \
+    using Str = CONSTANT(dispatch::string_literal{value, sizeof(value) - 1}); \
     return Str{}; \
   }() \
 
 #define STRING_LITERAL_VALUE(value) \
-  dispatch::string_literal::string_literal{value, sizeof(value) - 1}
+  dispatch::string_literal{value, sizeof(value) - 1}
 
 template<typename Str>
 struct compare_helper {
@@ -81,5 +81,4 @@ static constexpr bool equal(const Str&, const char* b) {
 
 STRING_TYPE_DECL(empty_string_t, "")
 
-}  // namespace string_literal
-}  // namespace jk
+}  // namespace dispatch

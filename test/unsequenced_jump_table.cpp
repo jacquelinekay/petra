@@ -14,7 +14,7 @@ struct test {
     ++results[N];
     assert(results[N] == 1);
   }
-  std::array<int, TestSet::size()> results = {0};
+  std::array<int, TestSet::size()> results = {{0}};
 };
 
 template<typename Table, size_t... Sequence>

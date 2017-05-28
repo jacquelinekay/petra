@@ -3,8 +3,6 @@
 #include <array>
 #include <iostream>
 
-// TODO: meta fuzz tests would be cool
-
 using TestSet = std::index_sequence<400, 32, 1, 99999, 1337, 42, 123456789, 0, 2, 2048>;
 
 struct test {
@@ -15,15 +13,15 @@ struct test {
     assert(results[N] == 1);
   }
 
-  std::array<int, TestSet::size()> results = {0};
+  std::array<int, TestSet::size()> results = {{0}};
 };
 
 template<typename F, typename T>
 struct switch_table_wrapper;
 
 template<typename F, size_t ...I>
-struct switch_table_wrapper<F, std::index_sequence<I...>> : mutable_recursive_switch_table<F, I...> {
-  switch_table_wrapper(F&& f) : mutable_recursive_switch_table<F, I...>{f} {
+struct switch_table_wrapper<F, std::index_sequence<I...>> : dispatch::recursive_switch_table<F, I...> {
+  switch_table_wrapper(F&& f) : dispatch::recursive_switch_table<F, I...>{f} {
   }
 };
 

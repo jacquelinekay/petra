@@ -8,8 +8,8 @@
 // for ALL strings from size 0 to maxlength that are NOT
 // in the string set, assert that they don't collide
 
-template<size_t Length>
-bool string_mutate(std::string& s, int index = 0) {
+template<std::size_t Length>
+bool string_mutate(std::string& s, std::size_t index = 0) {
   if (index == Length) {
     return false;
   }
@@ -20,27 +20,29 @@ bool string_mutate(std::string& s, int index = 0) {
   return true;
 }
 
-template<size_t I>
+/*
+template<std::size_t I>
 auto prepare_keyword_hashes(const std::array<const char*, I>& keywords) {
   std::array<std::set<char>, I> sets;
-  for (int i = 0; i < I; ++i) {
-    for (int j = 0; j < strlen(keywords[i]); ++j) {
+  for (std::size_t i = 0; i < I; ++i) {
+    for (std::size_t j = 0; j < strlen(keywords[i]); ++j) {
       sets[i].insert(keywords[i][j]);
     }
   }
   return sets;
 }
+*/
 
-template<typename Table, typename TestStrings, size_t... Length>
+template<typename Table, typename TestStrings, std::size_t... Length>
 void hash_all_strings(Table&& table, const TestStrings& test_strings, std::index_sequence<Length...>&&) {
-  constexpr auto N = set_size;
-  auto keyword_hashes = prepare_keyword_hashes<N>(test_strings);
+  constexpr auto N = dispatch::test_utils::set_size;
+  // auto keyword_hashes = prepare_keyword_hashes<N>(test_strings);
 
-  ([&table, &test_strings, &keyword_hashes]() {
+  ([&table, &test_strings]() {
     std::string test(Length, 32); // TODO: initialization
     do {
       bool skip = false;
-      for (int j = 0; j < N; ++j) {
+      for (std::size_t j = 0; j < N; ++j) {
         const auto key = test_strings[j];
         if (key == test.c_str()) {
           // don't try to hash this string
@@ -56,6 +58,7 @@ void hash_all_strings(Table&& table, const TestStrings& test_strings, std::index
 }
 
 int main() {
+  using namespace dispatch::test_utils;
   constexpr auto string_constants = example_constants();
 
   auto test_strings = example_test_strings();

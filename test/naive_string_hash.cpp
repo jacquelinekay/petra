@@ -13,11 +13,11 @@ struct test {
     ++results[N];
     assert(results[N] == 1);
   }
-  std::array<int, set_size> results = {0};
+  std::array<int, set_size> results = {{0}};
 };
 
 int main() {
-  std::array<const char*, set_size > test_strings = {
+  std::array<const char*, set_size > test_strings = {{
     "asdf",
     "qwerty",
     "quux",
@@ -28,9 +28,9 @@ int main() {
     "badc",
     "foo",
     // "oof"
-  };
+  }};
 
-  auto string_dispatch_table = make_naive_string_hash(
+  auto string_dispatch_table = dispatch::make_naive_string_hash(
     test{},
     STRING_LITERAL("asdf"),
     STRING_LITERAL("qwerty"),

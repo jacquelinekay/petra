@@ -1,3 +1,7 @@
+/* Linear runtime runtime-to-compile time string hash. For benchmarking
+ * purposes only.
+ * */
+
 #pragma once
 
 #include <tuple>
@@ -6,7 +10,7 @@
 
 #include <iostream>
 
-namespace sl = dispatch::string_literal;
+namespace dispatch {
 
 template<typename F, typename StringSet>
 struct naive_string_hash {
@@ -15,7 +19,7 @@ struct naive_string_hash {
   template<std::size_t ...I>
   void helper(std::index_sequence<I...>, const char* input) {
     return ([this](const char* input) {
-      if (sl::equal(std::tuple_element_t<I, StringSet>{}, input)) {
+      if (equal(std::tuple_element_t<I, StringSet>{}, input)) {
         callable(std::integral_constant<std::size_t, I>{});
       }
     }(input), ...);
@@ -27,6 +31,8 @@ struct naive_string_hash {
 };
 
 template<typename F, typename... Strings>
-constexpr auto make_naive_string_hash(F&& callable, Strings&&... strings) {
+constexpr auto make_naive_string_hash(F&& callable, Strings&&...) {
   return naive_string_hash<F, std::tuple<Strings...>>{callable};
 }
+
+}  // namespace dispatch

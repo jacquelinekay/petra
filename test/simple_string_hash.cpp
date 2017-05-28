@@ -3,6 +3,7 @@
 #include <iostream>
 
 int main() {
+  using namespace dispatch::test_utils;
   constexpr auto string_constants = example_constants();
 
   auto test_strings = example_test_strings();

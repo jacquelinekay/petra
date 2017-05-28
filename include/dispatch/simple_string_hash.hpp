@@ -6,7 +6,7 @@
 #include "dispatch/string_literal.hpp"
 #include "dispatch/utilities.hpp"
 
-namespace sl = dispatch::string_literal;
+namespace dispatch {
 
 // Disadvantages:
 // Runtime complexity is O(n) where n is the length of the longest string key
@@ -14,7 +14,7 @@ namespace sl = dispatch::string_literal;
 
 template<typename... Strings>
 struct simple_string_hash {
-  static constexpr unsigned MaxLength = max_string_length(Strings{}...);
+  static constexpr unsigned MaxLength = utilities::max_string_length(Strings{}...);
 
   auto operator()(const char* keyword) const {
     unsigned total = strlen(keyword);
@@ -43,3 +43,5 @@ template<typename... Strings>
 static constexpr auto make_simple_string_hash(Strings&&...) {
   return simple_string_hash<Strings...>{};
 }
+
+}  // namespace dispatch

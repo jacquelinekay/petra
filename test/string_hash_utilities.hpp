@@ -7,6 +7,9 @@
 #include <iostream>
 #include <tuple>
 
+namespace dispatch {
+namespace test_utils {
+
 // Shared utilities for testing string hash
 // TODO: Clean up the globals into a shared context
 static constexpr size_t set_size = 10;
@@ -27,7 +30,7 @@ constexpr auto example_constants() {
 }
 
 constexpr auto example_test_strings() {
-  return std::array<const char*, set_size>{
+  return std::array<const char*, set_size>{{
     "asdf",
     "qwerty",
     "quux",
@@ -38,7 +41,7 @@ constexpr auto example_test_strings() {
     "badc",
     "foo",
     "oof",
-  };
+  }};
 }
 
 struct test {
@@ -50,11 +53,11 @@ struct test {
       assert(results[N] == 1);
     }
   }
-  std::array<int, set_size> results = {0};
+  std::array<int, set_size> results = {{0}};
 };
 
 template<typename T, size_t... I>
-constexpr auto dispatch_table_from_tuple_helper(const T& strings, std::index_sequence<I...>&&) {
+constexpr auto dispatch_table_from_tuple_helper(const T&, std::index_sequence<I...>&&) {
   return make_string_dispatch<simple_string_hash, test>(
     test{},
     std::tuple_element_t<I, T>{}...
@@ -68,7 +71,7 @@ constexpr auto dispatch_table_from_tuple(const T& strings) {
 
 template<typename T, size_t... I>
 constexpr auto max_string_length_helper(const T& strings, std::index_sequence<I...>) {
-  return max_string_length(std::get<I>(strings)...);
+  return utilities::max_string_length(std::get<I>(strings)...);
 }
 
 template<typename T>
@@ -103,3 +106,5 @@ constexpr bool unique_hashes(const Table& table, const StringTuple& strings, std
 }
 
 
+}  // namespace test_utils
+}  // namespace dispatch

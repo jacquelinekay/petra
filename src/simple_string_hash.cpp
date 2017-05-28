@@ -19,7 +19,7 @@ struct printer {
 };
 
 int main() {
-  constexpr unsigned max = max_string_length(
+  constexpr unsigned max = dispatch::utilities::max_string_length(
     STRING_LITERAL("foo"),
     STRING_LITERAL("bar"),
     STRING_LITERAL("baz"),
@@ -27,20 +27,20 @@ int main() {
   );
   static_assert(max == 4);
 
-  constexpr auto hash = make_simple_string_hash(
+  constexpr auto hash = dispatch::make_simple_string_hash(
     STRING_LITERAL("foo"),
     STRING_LITERAL("bar"),
     STRING_LITERAL("baz"),
     STRING_LITERAL("quux")
   );
 
-  std::array<const char*, 4> string_set = {"foo", "bar", "baz", "quux"};
+  std::array<const char*, 4> string_set = {{"foo", "bar", "baz", "quux"}};
 
   for (const auto& s : string_set) {
     std::cout << "hash(" << s << ") => " << hash(s) << "\n";
   }
 
-  auto string_dispatch_table = make_string_dispatch<simple_string_hash>(
+  auto string_dispatch_table = dispatch::make_string_dispatch<dispatch::simple_string_hash>(
     printer{},
     STRING_LITERAL("foo"),
     STRING_LITERAL("bar"),

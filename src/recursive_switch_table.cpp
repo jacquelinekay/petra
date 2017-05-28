@@ -15,6 +15,6 @@ int main(int argc, char** argv) {
   }
   const int index = atoi(argv[1]);
 
-  auto switch_table = recursive_switch_table<printer, 100, 42, 8, 0>{printer{}};
+  auto switch_table = dispatch::recursive_switch_table<printer, 100, 42, 8, 0>{printer{}};
   switch_table(index);
 }
