@@ -13,7 +13,6 @@
 
 // Given a set of any N integers at compile time,
 // make a mapping to [0, N)
-// map runtime integer in the original set to 
 // TODO: make numeric type generic
 
 template<typename F, std::size_t ...Sequence>

@@ -18,10 +18,17 @@ namespace dispatch {
   } \
 
 struct string_literal {
+  template<char... Pack>
+  static decltype(auto) constexpr from_pack() {
+    return string_literal(
+        std::array<char, sizeof...(Pack)>{Pack...}, sizeof...(Pack));
+  }
+
   constexpr string_literal(const char* v, unsigned x) : value(v), s(x) { }
   constexpr auto size() const { return s; };
   constexpr auto data() const { return value; };
   constexpr auto char_at(unsigned i) const { return value[i]; };
+
 private:
   const char* value;
   const unsigned s;
@@ -79,6 +86,23 @@ static constexpr bool equal(const Str&, const char* b) {
   }
 }
 
+template<typename Str>
+bool operator==(Str&& a, const char* b) {
+  return equal(a, b);
+}
+
 STRING_TYPE_DECL(empty_string_t, "")
+
+#ifdef DISPATCH_USE_UDL
+namespace literals {
+  template<char ...Pack>
+  constexpr auto operator""_s() {
+    return [](){
+      using Str = CONSTANT(dispatch::string_literal::from_pack<Pack...>());
+      return Str{};
+    }();
+  }
+}  // namespace literals
+#endif
 
 }  // namespace dispatch

@@ -1,5 +1,5 @@
 #include <iostream>
-#include "dispatch/string_hash.hpp"
+#include "dispatch/chd.hpp"
 
 #include "dispatch/utilities.hpp"
 
@@ -11,7 +11,7 @@ struct printer {
 };
 
 int main() {
-  constexpr auto x = dispatch::make_minimal_hash(STRING_LITERAL("hello"),
+  constexpr auto x = dispatch::make_chd(STRING_LITERAL("hello"),
       STRING_LITERAL("goodbye"),
       STRING_LITERAL("dog"),
       STRING_LITERAL("fish"),

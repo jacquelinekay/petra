@@ -8,7 +8,7 @@ template<template<typename...> class Hash, typename F, typename ...Strings>
 struct string_dispatch {
   string_dispatch(F&& callable) : table{callable} { }
 
-  switch_table<F, Hash<Strings...>::hash(Strings{})...> table;
+  SwitchTable<F, std::index_sequence<Hash<Strings...>::hash(Strings{})...>> table;
 
   static constexpr auto string_hash = Hash<Strings...>{};
 

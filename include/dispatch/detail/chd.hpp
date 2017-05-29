@@ -20,6 +20,8 @@ namespace detail {
   };
 
   static constexpr inline std::size_t distinct_offset = 0x01000193;
+  static constexpr inline std::size_t overflow_boundary =
+      std::numeric_limits<std::size_t>::max() / 0x01000193;
 
   static constexpr std::size_t distinct_hash(
       std::size_t d, std::size_t value, std::size_t size) {
@@ -48,7 +50,7 @@ namespace detail {
   }
 
   template<typename ...Inputs>
-  static constexpr auto initialize_dictionary() {
+  static constexpr auto initialize_dictionary() noexcept {
     constexpr std::size_t set_size = sizeof...(Inputs);
     constexpr auto unique_seq = remove_repeats(
         std::index_sequence<distinct_hash(0, Inputs{}, set_size)...>{});
@@ -77,8 +79,12 @@ namespace detail {
   }
 
   template<std::size_t Total, std::size_t D, typename ...SubInputs, typename Values>
-  static constexpr auto get_unique_hash_value(Values&& values) {
+  static constexpr auto get_unique_hash_value(Values&& values) noexcept {
+    static_assert(D < overflow_boundary,
+        "Tried to hash value which would lead to unsigned overflow.\
+         Sorry, the algorithm is not robust enough to handle your input set!");
     constexpr std::size_t subset_size = sizeof...(SubInputs);
+
     if constexpr (subset_size == 0) {
       return std::make_pair(
           std::make_pair(hash_status::Empty, 0),
@@ -105,7 +111,7 @@ namespace detail {
     }
   }
 
-  template<typename IntermediateHash, typename ...Inputs>
+  template<template<typename...> typename IntermediateHash, typename ...Inputs>
   static constexpr auto construct_hash() {
     constexpr std::size_t set_size = sizeof...(Inputs);
     constexpr auto dict = initialize_dictionary<Inputs...>();
@@ -196,9 +202,7 @@ namespace detail {
     constexpr auto unique_values = assign_result.first;
 
     // initial values maps to unique values
-    // TODO: Make this a customization point?
-    return make_switch_table(
-      [keys, unique_values](auto&& index) {
+    constexpr auto table_callback = [keys, unique_values](auto&& index) {
         constexpr auto I = map_to_index<std::decay_t<decltype(index)>{}>(keys);
 
         if constexpr (I >= tuple_size(unique_values)) {
@@ -206,8 +210,9 @@ namespace detail {
         } else {
           return std::get<I>(unique_values);
         }
-      },
-      keys);
+      };
+    return IntermediateHash<decltype(table_callback), std::decay_t<decltype(keys)>>{
+        table_callback};
   }
 
 

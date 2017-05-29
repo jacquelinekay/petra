@@ -2,31 +2,13 @@
 
 #include <array>
 #include <utility>
-
-// TODO: take out constexpr lambdas if C++14
-/* Disadvantages:
- * Limited to sequential integer lookup.
- * Return type of the callbacks must be uniform.
- * */
-// TODO: Variadic args interface?
+#include "dispatch/detail/array_jump_table.hpp"
 
 namespace dispatch {
 
-template<template<size_t> typename F, size_t ...I>
-constexpr auto make_table_helper(std::index_sequence<I...>&&) {
-  using return_type = std::result_of_t<F<0>()>;
-  static_assert((std::is_same<return_type, std::result_of_t<F<I>()>>{} && ...));
-
-  return std::array<return_type(*)(), sizeof...(I)> {
-    {+[]() {
-      return F<I>{}();
-    }...}
-  };
-}
-
-template<template<size_t> typename F, size_t N>
-constexpr auto make_jump_table() {
-  return make_table_helper<F>(std::make_index_sequence<N>{});
-}
+  template<template<std::size_t> typename F, std::size_t N, typename ...Args>
+  constexpr decltype(auto) make_tagged_jump_table() {
+    return detail::ArrayTagTable<F, N, Args...>{};
+  }
 
 }  // namespace dispatch

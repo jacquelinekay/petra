@@ -2,16 +2,17 @@
 
 #include "dispatch/array_jump_table.hpp"
 
-template<size_t N>
+template<std::size_t I>
 struct printer {
-  void operator()() const {
-    std::cout << N << "\n";
+  void operator()() {
+    std::cout << I << "\n";
   }
 };
 
 int main(int argc, char** argv) {
   constexpr unsigned limit = 4;
-  constexpr auto table = dispatch::make_jump_table<printer, limit>();
+
+  auto table = dispatch::make_tagged_jump_table<printer, limit>();
   if (argc < 2) {
     return 255;
   }
@@ -19,5 +20,5 @@ int main(int argc, char** argv) {
   if (index >= limit) {
     return 255;
   }
-  table[index]();
+  table(index);
 }

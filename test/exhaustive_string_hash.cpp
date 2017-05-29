@@ -5,8 +5,8 @@
 #include <iostream>
 #include <set>
 
-// for ALL strings from size 0 to maxlength that are NOT
-// in the string set, assert that they don't collide
+// for ALL alphanumeric strings from size 1 to maxlength that are NOT
+// in the string set, log collisions
 
 template<std::size_t Length>
 bool string_mutate(std::string& s, std::size_t index = 0) {
@@ -50,7 +50,6 @@ void hash_all_strings(Table&& table, const TestStrings& test_strings, std::index
         }
       }
       if (!skip) {
-        std::cout << test << "\n";
         table(test.c_str());
       }
     } while (string_mutate<Length>(test));
