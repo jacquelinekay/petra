@@ -93,7 +93,7 @@ bool operator==(Str&& a, const char* b) {
 
 STRING_TYPE_DECL(empty_string_t, "")
 
-#ifdef DISPATCH_USE_UDL
+// #ifdef DISPATCH_USE_UDL
 namespace literals {
   template<char ...Pack>
   constexpr auto operator""_s() {
@@ -103,6 +103,6 @@ namespace literals {
     }();
   }
 }  // namespace literals
-#endif
+// #endif
 
 }  // namespace dispatch

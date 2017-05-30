@@ -27,7 +27,7 @@ namespace dispatch {
     }
 
     template<typename RuntimeType>
-    constexpr auto operator()(const RuntimeType& input) {
+    constexpr auto operator()(const RuntimeType& input) const {
       return hash(input);
     }
 
@@ -38,19 +38,25 @@ namespace dispatch {
 
   // TODO: Factories for all kinds o' strings
 
-  template<template<typename...> typename Hash, typename... Args>
-  static constexpr auto make_chd(Args&&... args) {
-    return CHDHash<Hash, std::decay_t<decltype(args)>...>{};
-  }
 
-  template<typename... Args>
-  static constexpr auto make_chd(Args&&... args) {
-    return CHDHash<SwitchTable, std::decay_t<decltype(args)>...>{};
+  template<template<typename...> typename Hash, typename... Args>
+  static constexpr auto make_chd() {
+    return CHDHash<Hash, Args...>{};
   }
 
   template<typename... Args>
   static constexpr auto make_chd() {
     return CHDHash<SwitchTable, Args...>{};
+  }
+
+  template<template<typename...> typename Hash, typename A, typename... Args>
+  static constexpr auto make_chd(A&&, Args&&...) {
+    return CHDHash<Hash, std::decay_t<A>, std::decay_t<Args>...>{};
+  }
+
+  template<typename A, typename... Args>
+  static constexpr auto make_chd(A&&, Args&&...) {
+    return CHDHash<SwitchTable, std::decay_t<A>, std::decay_t<Args>...>{};
   }
 
 }  // namespace dispatch

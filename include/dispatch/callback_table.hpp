@@ -14,7 +14,7 @@ namespace dispatch {
 
     template<typename Key, typename ...Args>
     decltype(auto) trigger(Key&& key, Args&&... args) {
-      return value_hash(key_hash(key), callbacks, std::forward<Args>(args)...);
+      return v_hash(key_hash(key), callbacks, std::forward<Args>(args)...);
     }
 
   private:
@@ -25,7 +25,9 @@ namespace dispatch {
 
     static constexpr auto callback_map = [](auto&& index, auto&& c, auto&&... args) {
       constexpr std::size_t I = std::decay_t<decltype(index)>::value;
-      return std::get<I>(c)(args...);
+      if constexpr (I < std::tuple_size<Callbacks>{}) {
+        return std::get<I>(c)(args...);
+      }
     };
 
     static constexpr auto v_hash = make_sequential_table<size>(callback_map);

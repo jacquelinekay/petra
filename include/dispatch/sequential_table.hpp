@@ -8,6 +8,22 @@ namespace dispatch {
   callable(std::integral_constant<std::size_t, I>{}, \
            std::forward<Args>(args)...)
 
+// TODO: error handling anti-pattern
+#define DISPATCH_RECURSIVE_SWITCH_TABLE_APPLY_BODY() \
+  using Result = std::result_of_t<F( \
+    std::integral_constant<std::size_t, I>, Args...)>; \
+  if constexpr (I < N) { \
+    switch(i) { \
+      case I: \
+        return DISPATCH_RECURSIVE_SWITCH_TABLE_RETURNS(); \
+      default: \
+        return apply<I + 1>(i, std::forward<Args>(args)...); \
+    } \
+  }  else if constexpr (!std::is_same<Result, void>{}) { \
+    return Result{}; \
+  } \
+
+
 #define DISPATCH_NOEXCEPT_FUNCTION_BODY(...) \
   noexcept(noexcept(__VA_ARGS__)) { \
     return __VA_ARGS__; \
@@ -19,26 +35,25 @@ namespace dispatch {
     F callable;
 
     template<std::size_t I, typename ...Args>
-    constexpr decltype(auto) apply(std::size_t i, Args&&... args )
+    constexpr decltype(auto) apply(std::size_t i, Args&&... args)
     noexcept(noexcept(DISPATCH_RECURSIVE_SWITCH_TABLE_RETURNS()))
     {
-      // TODO: error handling anti-pattern
-      using Result = std::result_of_t<F( \
-        std::integral_constant<std::size_t, I>, Args...)>; \
-      if constexpr (I < N) {
-        switch(i) {
-          case I:
-            return DISPATCH_RECURSIVE_SWITCH_TABLE_RETURNS();
-          default:
-            return apply<I + 1>(i, std::forward<Args>(args)...);
-        }
-      }  else if constexpr (!std::is_same<Result, void>{}) { \
-        return Result{}; \
-      }
+      DISPATCH_RECURSIVE_SWITCH_TABLE_APPLY_BODY()
+    }
+
+    template<std::size_t I, typename ...Args>
+    constexpr decltype(auto) apply(std::size_t i, Args&&... args) const
+    noexcept(noexcept(DISPATCH_RECURSIVE_SWITCH_TABLE_RETURNS()))
+    {
+      DISPATCH_RECURSIVE_SWITCH_TABLE_APPLY_BODY()
     }
 
     template<typename ...Args>
     constexpr decltype(auto) operator()(std::size_t i, Args&&... args)
+    DISPATCH_NOEXCEPT_FUNCTION_BODY(apply<0>(i, std::forward<Args>(args)...))
+
+    template<typename ...Args>
+    constexpr decltype(auto) operator()(std::size_t i, Args&&... args) const
     DISPATCH_NOEXCEPT_FUNCTION_BODY(apply<0>(i, std::forward<Args>(args)...))
 
   };
@@ -49,5 +64,6 @@ namespace dispatch {
 
 #undef DISPATCH_RECURSIVE_SWITCH_TABLE_RETURNS
 #undef DISPATCH_NOEXCEPT_FUNCTION_BODY
+#undef DISPATCH_RECURSIVE_SWITCH_TABLE_APPLY_BODY
 
 }  // namespace dispatch
