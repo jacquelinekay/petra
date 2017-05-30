@@ -11,6 +11,8 @@
 #include "dispatch/simple_string_hash.hpp"
 #include "dispatch/string_dispatch.hpp"
 
+using namespace dispatch::literals;
+
 struct printer {
   template<std::size_t N>
   void operator()(std::integral_constant<std::size_t, N>) const {
@@ -20,18 +22,18 @@ struct printer {
 
 int main() {
   constexpr unsigned max = dispatch::utilities::max_string_length(
-    STRING_LITERAL("foo"),
-    STRING_LITERAL("bar"),
-    STRING_LITERAL("baz"),
-    STRING_LITERAL("quux")
+    "foo"_s,
+    "bar"_s,
+    "baz"_s,
+    "quux"_s
   );
   static_assert(max == 4);
 
   constexpr auto hash = dispatch::make_simple_string_hash(
-    STRING_LITERAL("foo"),
-    STRING_LITERAL("bar"),
-    STRING_LITERAL("baz"),
-    STRING_LITERAL("quux")
+    "foo"_s,
+    "bar"_s,
+    "baz"_s,
+    "quux"_s
   );
 
   std::array<const char*, 4> string_set = {{"foo", "bar", "baz", "quux"}};
@@ -42,10 +44,10 @@ int main() {
 
   auto string_dispatch_table = dispatch::make_string_dispatch<dispatch::simple_string_hash>(
     printer{},
-    STRING_LITERAL("foo"),
-    STRING_LITERAL("bar"),
-    STRING_LITERAL("baz"),
-    STRING_LITERAL("quux")
+    "foo"_s,
+    "bar"_s,
+    "baz"_s,
+    "quux"_s
   );
 
   for (const auto& s : string_set) {

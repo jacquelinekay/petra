@@ -3,6 +3,10 @@
 
 #include "dispatch/utilities.hpp"
 
+#include "dispatch/string_literal.hpp"
+
+using namespace dispatch::literals;
+
 struct printer {
   template<std::size_t N>
   void operator()(std::integral_constant<std::size_t, N>) const {
@@ -11,11 +15,11 @@ struct printer {
 };
 
 int main() {
-  constexpr auto x = dispatch::make_chd(STRING_LITERAL("hello"),
-      STRING_LITERAL("goodbye"),
-      STRING_LITERAL("dog"),
-      STRING_LITERAL("fish"),
-      STRING_LITERAL("cat"));
+  constexpr auto x = dispatch::make_chd("hello"_s,
+      "goodbye"_s,
+      "dog"_s,
+      "fish"_s,
+      "cat"_s);
   using Hash = decltype(x);
 
   std::cout << "hash(hello) => " << Hash::hash("hello") << "\n";

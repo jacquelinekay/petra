@@ -26,6 +26,7 @@ dispatch_add_executable(string_hash src/string_hash.cpp)
 dispatch_add_executable(simple_string_hash src/simple_string_hash.cpp)
 
 dispatch_add_executable(callback_table src/callback_table.cpp)
+dispatch_add_executable(map src/map.cpp)
 
 dispatch_add_executable(simple_string_hash_test test/simple_string_hash.cpp)
 dispatch_add_executable(exhaustive_string_hash_test test/exhaustive_string_hash.cpp)

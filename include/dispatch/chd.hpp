@@ -1,6 +1,7 @@
 #pragma once
 
 #include "dispatch/detail/chd.hpp"
+#include "dispatch/utilities/sequence.hpp"
 
 namespace dispatch {
 
@@ -34,6 +35,12 @@ namespace dispatch {
   private:
     static constexpr auto second_hash =
         detail::construct_hash<IntermediateHash, Inputs...>();
+
+    static constexpr bool no_collisions() {
+      return unique(std::index_sequence<hash(Inputs{})...>{});
+    }
+
+    static_assert(no_collisions());
   };
 
   // TODO: Factories for all kinds o' strings

@@ -16,7 +16,7 @@ namespace utilities {
   // Hm
   template<size_t Max, typename Cur, typename ...Strings>
   constexpr auto max_string_length_recursive(const std::tuple<Cur, Strings...>&) {
-    constexpr unsigned Size = std::decay_t<Cur>::value().size();
+    constexpr unsigned Size = std::decay_t<Cur>::size();
     if constexpr (Size > Max) {
       if constexpr (sizeof...(Strings) > 0) {
         return max_string_length_recursive<Size>(std::make_tuple(Strings{}...));
@@ -72,6 +72,17 @@ namespace utilities {
     }
   }
 
+  // XXX
+  /*
+  template<typename Product>
+  struct product_to_sum {
+    using type = decltype(std::apply(unwrap, std::declval<Product>()));
+  private:
+    static constexpr auto unwrap = [](auto&&... args) {
+      return std::variant<std::decay_t<decltype(args)>...>{};
+    }
+  };
+  */
 
 }  // namespace utilities
 }  // namespace dispatch

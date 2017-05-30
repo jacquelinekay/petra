@@ -76,14 +76,14 @@ namespace dispatch {
 
   template<std::size_t... Result>
   static constexpr auto make_unique_sequence(
-      std::index_sequence<Result...>&& result, std::index_sequence<>) {
+      const std::index_sequence<Result...>& result, std::index_sequence<>) {
     return result;
   }
 
   // do we need to ensure that order is preserved?
   template<std::size_t... Result, std::size_t X, std::size_t... Sequence>
   constexpr auto make_unique_sequence(
-      std::index_sequence<Result...>&&, std::index_sequence<X, Sequence...>) {
+      const std::index_sequence<Result...>&, std::index_sequence<X, Sequence...>) {
     if constexpr (in_sequence(X, Result...)) {
       return make_unique_sequence(
           std::index_sequence<Result...>{}, std::index_sequence<Sequence...>{});
@@ -94,8 +94,13 @@ namespace dispatch {
   }
 
   template<std::size_t... Sequence>
-  static constexpr auto remove_repeats(std::index_sequence<Sequence...>&& s) {
+  static constexpr auto remove_repeats(const std::index_sequence<Sequence...>& s) {
     return make_unique_sequence(std::index_sequence<>{}, s);
+  }
+
+  template<std::size_t... Sequence>
+  static constexpr bool unique(const std::index_sequence<Sequence...>& seq) {
+    return seq.size() == remove_repeats(seq).size();
   }
 
   constexpr auto concatenate() {

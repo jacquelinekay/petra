@@ -5,6 +5,7 @@
 
 static constexpr size_t set_size = 9;
 
+using namespace dispatch::literals;
 
 struct test {
   template<std::size_t N>
@@ -32,16 +33,16 @@ int main() {
 
   auto string_dispatch_table = dispatch::make_naive_string_hash(
     test{},
-    STRING_LITERAL("asdf"),
-    STRING_LITERAL("qwerty"),
-    STRING_LITERAL("quux"),
-    STRING_LITERAL("int"),
-    STRING_LITERAL("arguments"),
-    STRING_LITERAL("foobar"),
-    STRING_LITERAL("abcd"),
-    STRING_LITERAL("badc"),
-    STRING_LITERAL("foo")
-    // STRING_LITERAL("oof")
+    "asdf"_s,
+    "qwerty"_s,
+    "quux"_s,
+    "int"_s,
+    "arguments"_s,
+    "foobar"_s,
+    "abcd"_s,
+    "badc"_s,
+    "foo"_s
+    // "oof"_s
   );
 
   for (const auto& s : test_strings) {

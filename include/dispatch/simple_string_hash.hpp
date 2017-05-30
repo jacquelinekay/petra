@@ -28,14 +28,14 @@ struct simple_string_hash {
   template<typename StringLiteral, size_t ...I>
   static constexpr auto compute_helper(StringLiteral&&, std::index_sequence<I...>) {
     using S = std::decay_t<StringLiteral>;
-    return ((S::value().data()[I] * (I + 1)) + ...);
+    return ((S::data()[I] * (I + 1)) + ...);
   }
 
   template<typename StringLiteral>
   static constexpr auto hash(StringLiteral&& literal) {
     using S = std::decay_t<StringLiteral>;
     return compute_helper(
-        literal, std::make_index_sequence<S::value().size()>{}) + S::value().size();
+        literal, std::make_index_sequence<S::size()>{}) + S::size();
   }
 };
 

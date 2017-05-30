@@ -46,7 +46,7 @@ namespace detail {
   template<typename String>
   static constexpr std::size_t distinct_hash(
       std::size_t d, String&&, std::size_t size) {
-    return distinct_hash(d, std::decay_t<String>::value().data(), size);
+    return distinct_hash(d, std::decay_t<String>::data(), size);
   }
 
   template<typename ...Inputs>
@@ -69,7 +69,7 @@ namespace detail {
     static_assert(tuple_size(initial_tuple) == n_uniques);
 
     constexpr auto accumulate_sets = [unique_seq](auto&& dict, auto&& str) {
-      constexpr auto value = std::decay_t<decltype(str)>::value().data();
+      constexpr auto value = std::decay_t<decltype(str)>::data();
       constexpr auto hashed_value = distinct_hash(0, value, set_size);
       constexpr std::size_t index = map_to_index<hashed_value>(unique_seq);
       return insert_at<index>(dict, append(std::get<index>(dict), str));
@@ -78,7 +78,8 @@ namespace detail {
         fold_left(accumulate_sets, initial_tuple, Inputs{}...));
   }
 
-  template<std::size_t Total, std::size_t D, typename ...SubInputs, typename Values>
+  template<std::size_t Total, std::size_t D,
+           typename ...SubInputs, typename Values>
   static constexpr auto get_unique_hash_value(Values&& values) noexcept {
     static_assert(D < overflow_boundary,
         "Tried to hash value which would lead to unsigned overflow.\
@@ -87,24 +88,20 @@ namespace detail {
 
     if constexpr (subset_size == 0) {
       return std::make_pair(
-          std::make_pair(hash_status::Empty, 0),
+          std::make_pair(hash_status::Empty, Total),
           std::index_sequence<>{});
     } else if constexpr (subset_size == 1) {
       // Maps directly to a unique string, so we can avoid hashing.
       return std::make_pair(
-          std::make_pair(hash_status::Unique, 0),
+          std::make_pair(hash_status::Unique, Total),
           std::index_sequence<>{});
     } else {
-      constexpr auto unique_seq = remove_repeats(
-          std::index_sequence<
-            distinct_hash(D, SubInputs{}, Total)...
-          >{});
+      constexpr auto seq = std::index_sequence<
+            distinct_hash(D, SubInputs{}, Total)...>{};
 
-      if constexpr (disjoint(unique_seq, std::decay_t<decltype(values)>{})) {
+      if constexpr (unique(seq) && disjoint(seq, std::decay_t<decltype(values)>{})) {
         // Make sure to return the new values
-        return std::make_pair(
-            std::make_pair(hash_status::Collision, D),
-            unique_seq);
+        return std::make_pair(std::make_pair(hash_status::Collision, D), seq);
       } else {
         return get_unique_hash_value<Total, D + 1, SubInputs...>(values);
       }
@@ -118,17 +115,16 @@ namespace detail {
     constexpr auto keys = dict.first;
     constexpr auto subsets = dict.second;
 
-    // for each set of inputs, find a value which hashes them to unique values
     constexpr auto disambiguate = [](auto&&... string_list) {
       // result: pair((hash status, d), values)
       constexpr auto unique_hash_values = [](auto&& result, auto&& inputs) {
         auto f = [result](auto&&... s) {
-          auto next = get_unique_hash_value<
+          auto next_result = get_unique_hash_value<
                   set_size, 1, std::decay_t<decltype(s)>...>(
               result.second);
           return std::pair(
-              append(result.first, next.first),
-              concatenate(result.second, next.second));
+              append(result.first, next_result.first),
+              concatenate(result.second, next_result.second));
         };
         return std::apply(f, inputs);
       };
@@ -138,44 +134,17 @@ namespace detail {
           std::make_pair(std::make_tuple(), std::index_sequence<>{}),
           string_list...);
     };
-    constexpr auto next_keys = std::apply(disambiguate, subsets).first;
+    constexpr auto disambiguated_result = std::apply(disambiguate, subsets);
+    constexpr auto next_keys = disambiguated_result.first;
+    constexpr auto hashed_values = disambiguated_result.second;
 
-    constexpr auto filter_collisions = [next_keys](auto&& seq, auto&& i) {
-      constexpr size_t index = std::decay_t<decltype(i)>::value;
-      constexpr auto status = std::get<index>(next_keys).first;
-      if constexpr (status == hash_status::Collision) {
-        return append<index>(seq);
-      } else {
-        return seq;
-      }
-    };
-    constexpr auto filtered_seq = fold_left(
-        filter_collisions, std::index_sequence<>{},
-        std::make_index_sequence<tuple_size(next_keys)>{});
-
-    constexpr auto do_hash =
-      [next_keys, subsets, filtered_seq](auto&& result, auto&& i) {
-        constexpr std::size_t index = std::decay_t<decltype(i)>::value;
-        if constexpr (in_sequence(index, filtered_seq)) {
-          constexpr auto f = [next_keys](auto&&... strs) {
-            return std::index_sequence<
-              distinct_hash(std::get<index>(next_keys).second,
-                  std::decay_t<decltype(strs)>::value().data(), set_size)...
-            >{};
-          };
-          return concatenate(
-              result,
-              std::apply(f, std::get<index>(subsets)));
-        } else {
-          return result;
-        }
-      };
-    constexpr auto hashed_values = fold_left(do_hash, std::index_sequence<>{},
-        std::make_index_sequence<keys.size()>{});
+    static_assert(unique(hashed_values));
 
     constexpr auto freelist = difference(
         std::make_index_sequence<set_size>{},
         hashed_values);
+
+    static_assert(hashed_values.size() + freelist.size() == set_size);
 
     constexpr auto pop_from_freelist =
       [next_keys](auto&& result_freelist, auto&& i) {
@@ -211,10 +180,9 @@ namespace detail {
           return std::get<I>(unique_values);
         }
       };
-    return IntermediateHash<decltype(table_callback), std::decay_t<decltype(keys)>>{
-        table_callback};
+    return IntermediateHash<decltype(table_callback),
+                            std::decay_t<decltype(keys)>>{table_callback};
   }
-
 
 }  // namespace detail
 }  // namespace dispatch
