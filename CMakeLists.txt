@@ -32,12 +32,6 @@ dispatch_add_executable(sequential_table_test test/sequential_table.cpp)
 dispatch_add_executable(string_hash_test test/string_hash.cpp)
 dispatch_add_executable(switch_table_test test/switch_table.cpp)
 
-# XXX
-#dispatch_add_executable(generic_jump_table src/generic_jump_table.cpp)
-#dispatch_add_executable(simple_string_hash src/simple_string_hash.cpp)
-#dispatch_add_executable(exhaustive_string_hash_test test/exhaustive_string_hash.cpp)
-#dispatch_add_executable(simple_string_hash_test test/simple_string_hash.cpp)
-#dispatch_add_executable(unsequenced_jump_table_test test/unsequenced_jump_table.cpp)
 
 # Generate benchmarks: better reports
 if(BUILD_BENCHMARKS)
