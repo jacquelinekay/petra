@@ -1,4 +1,4 @@
-#include "dispatch/linear_hash.hpp"
+#include "dispatch/chd.hpp"
 #include "dispatch/string_literal.hpp"
 
 #include "utilities.hpp"
@@ -26,7 +26,7 @@ int main() {
     "oof"
   }};
 
-  auto string_hash = dispatch::make_linear_hash(
+  auto string_hash = dispatch::make_chd(
     "asdf"_s,
     "qwerty"_s,
     "quux"_s,

@@ -19,10 +19,7 @@ namespace dispatch {
     // TODO: May need to make this a unique list
     // using ValueVariant = std::variant<Values...>;
 
-    // TODO Error propagation if key is not in map
-
-    // runtime key
-    // use expected instead?
+    // TODO Error propagation if key is not in map; use expected?
     template<typename Value, typename Key>
     constexpr const Value* at(Key&& k) const {
       const Value* v;
@@ -35,7 +32,6 @@ namespace dispatch {
     void insert(Key&& k, Value&& v) {
       set_value_hash(key_hash(k), values, std::forward<Value>(v));
     }
-
 
   private:
     template<typename Key, typename Value>
@@ -50,8 +46,7 @@ namespace dispatch {
 
     using index_map_t = std::array<std::size_t, size>;
     static constexpr index_map_t index_map =
-        detail::init_index_map<index_map_t, key_hash(Keys{})...>(
-            index_map_t{{0}}, 0);
+        detail::init_index_map<index_map_t, key_hash(Keys{})...>(index_map_t{});
 
     static constexpr auto set_pointer_l = [](auto&& index, const auto& vs, auto& ptr) {
       constexpr std::size_t I = std::decay_t<decltype(index)>::value;
@@ -96,6 +91,12 @@ namespace dispatch {
   template<typename... Keys, typename Values>
   constexpr decltype(auto) make_map(std::tuple<Keys...>&&, Values&& values) {
     return Map<SwitchTable, Values, Keys...>(std::forward<Values>(values));
+  }
+
+  template<typename... Pairs>
+  constexpr decltype(auto) make_map(Pairs&&... pairs) {
+    auto result = split_pairs(pairs...);
+    return make_map(result.first, result.second);
   }
 
 }  // namespace dispatch

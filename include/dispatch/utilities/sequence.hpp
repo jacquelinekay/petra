@@ -19,7 +19,6 @@ namespace dispatch {
   }
 
   // Reverse operation: given an item in the sequence, return its index
-
   template<size_t I, size_t ...Sequence>
   constexpr unsigned map_to_index() {
     return access_sequence_helper<I>(

@@ -26,7 +26,8 @@ namespace dispatch {
   constexpr auto fold_left(const F& f, Init&& init, std::index_sequence<I...>) {
     // auto result = (... >>= fold_wrapper<F, Xs>{f, xs});
     auto result = (fold_wrapper<F, Init>{f, init} >>= ...
-        >>= fold_wrapper<F, std::integral_constant<std::size_t, I>>{f, std::integral_constant<std::size_t, I>{}});
+        >>= fold_wrapper<F, std::integral_constant<std::size_t, I>>{
+            f, std::integral_constant<std::size_t, I>{}});
     return result.state;
   }
 

@@ -20,7 +20,7 @@ namespace dispatch {
         return apply<I + 1>(i, std::forward<Args>(args)...); \
     } \
   }  else if constexpr (!std::is_same<Result, void>{}) { \
-    return Result{}; \
+    return error_value; \
   } \
 
 
@@ -30,9 +30,24 @@ namespace dispatch {
   } \
 
   // Conceptually, an optimization of SwitchTable for a sequential set of integers
-  template<typename F, std::size_t N>
+  template<typename F, std::size_t N, typename ErrorType = void*>
   struct SequentialTable {
     F callable;
+    const ErrorType error_value;
+    static constexpr auto get_error_val = []() {
+      if constexpr (std::is_same<ErrorType, void*>{}) {
+        return nullptr;
+      } else {
+        // TODO: Handle non-default-constructible case
+        return ErrorType{};
+      }
+    };
+
+    constexpr SequentialTable(F&& f) : callable(f), error_value(get_error_val()) {
+    }
+
+    constexpr SequentialTable(F&& f, ErrorType&& e) : callable(f), error_value(e) {
+    }
 
     template<std::size_t I, typename ...Args>
     constexpr decltype(auto) apply(std::size_t i, Args&&... args)
@@ -61,6 +76,11 @@ namespace dispatch {
   template<std::size_t N, typename F>
   constexpr decltype(auto) make_sequential_table(F&& f)
   DISPATCH_NOEXCEPT_FUNCTION_BODY(SequentialTable<F, N>{std::forward<F>(f)});
+
+  template<std::size_t N, typename F, typename ErrorType>
+  constexpr decltype(auto) make_sequential_table(F&& f, ErrorType&& error_value)
+  DISPATCH_NOEXCEPT_FUNCTION_BODY(SequentialTable<F, N>{
+      std::forward<F>(f), std::forward<ErrorType>(error_value)});
 
 #undef DISPATCH_RECURSIVE_SWITCH_TABLE_RETURNS
 #undef DISPATCH_NOEXCEPT_FUNCTION_BODY

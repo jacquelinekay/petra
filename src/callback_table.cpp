@@ -38,9 +38,10 @@ int main() {
       )
   );
 
-  while (1) {
-    std::string input;
+  std::string input;
+  while (input != "exit") {
     std::cin >> input;
     table.trigger(input.c_str());
   }
+  return 0;
 }

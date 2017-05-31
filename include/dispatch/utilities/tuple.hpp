@@ -1,5 +1,6 @@
 #pragma once
 
+#include "dispatch/utilities/fold.hpp"
 #include <tuple>
 
 namespace dispatch {
@@ -59,6 +60,23 @@ namespace detail {
   template<std::size_t I, typename T, typename Elem>
   static constexpr auto insert_at(T&& t, Elem&& elem) {
     return std::tuple_cat(append(get_elements_until<I>(t), elem), get_elements_after<I>(t));
+  }
+
+  template<std::size_t I, typename... Inputs>
+  static constexpr decltype(auto) split_on_index(Inputs&&... inputs) {
+    constexpr auto f = [](auto&& result, auto&& p) {
+      return append(result, std::get<I>(p));
+    };
+
+    return fold_left(f, std::make_tuple(), inputs...);
+  }
+
+  template<typename ...Keys, typename ...Values>
+  static constexpr decltype(auto) split_pairs(
+      std::pair<Keys, Values>&&... pairs) {
+    return std::make_pair(
+        split_on_index<0>(pairs...),
+        split_on_index<1>(pairs...));
   }
 
 }  // namespace dispatch

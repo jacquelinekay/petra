@@ -1,9 +1,8 @@
 #include <iostream>
+
 #include "dispatch/chd.hpp"
-
-#include "dispatch/utilities.hpp"
-
 #include "dispatch/string_literal.hpp"
+#include "dispatch/utilities.hpp"
 
 using namespace dispatch::literals;
 

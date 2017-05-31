@@ -6,7 +6,6 @@ include(cmake/dispatch_add_executable.cmake)
 
 include_directories(include)
 
-dispatch_add_executable(generic_jump_table src/generic_jump_table.cpp)
 
 # TODO: will probably take this out unless performance is drastically better
 # Find `vrm_pp`:
@@ -20,22 +19,27 @@ if(BUILD_BENCHMARKS)
     target_include_directories(macro_switch_table PUBLIC ${VRM_PP_INC_DIR})
 endif()
 
+# Examples
 dispatch_add_executable(switch_table src/switch_table.cpp)
-
 dispatch_add_executable(string_hash src/string_hash.cpp)
-dispatch_add_executable(simple_string_hash src/simple_string_hash.cpp)
-
 dispatch_add_executable(callback_table src/callback_table.cpp)
 dispatch_add_executable(map src/map.cpp)
 
-dispatch_add_executable(simple_string_hash_test test/simple_string_hash.cpp)
-dispatch_add_executable(exhaustive_string_hash_test test/exhaustive_string_hash.cpp)
+dispatch_add_executable(callback_table_test test/callback_table.cpp)
+# dispatch_add_executable(map test/map.cpp)
 dispatch_add_executable(naive_string_hash_test test/naive_string_hash.cpp)
+dispatch_add_executable(sequential_table_test test/sequential_table.cpp)
+dispatch_add_executable(string_hash_test test/string_hash.cpp)
 dispatch_add_executable(switch_table_test test/switch_table.cpp)
-dispatch_add_executable(unsequenced_jump_table_test test/unsequenced_jump_table.cpp)
 
-# Generate benchmarks
+# XXX
+#dispatch_add_executable(generic_jump_table src/generic_jump_table.cpp)
+#dispatch_add_executable(simple_string_hash src/simple_string_hash.cpp)
+#dispatch_add_executable(exhaustive_string_hash_test test/exhaustive_string_hash.cpp)
+#dispatch_add_executable(simple_string_hash_test test/simple_string_hash.cpp)
+#dispatch_add_executable(unsequenced_jump_table_test test/unsequenced_jump_table.cpp)
 
+# Generate benchmarks: better reports
 if(BUILD_BENCHMARKS)
     add_custom_target(benchmarks)
 

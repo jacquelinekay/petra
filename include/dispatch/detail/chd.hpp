@@ -2,6 +2,7 @@
 
 #include <tuple>
 
+#include "dispatch/linear_hash.hpp"
 #include "dispatch/switch_table.hpp"
 #include "dispatch/string_dispatch.hpp"
 #include "dispatch/string_literal.hpp"
@@ -110,78 +111,86 @@ namespace detail {
 
   template<template<typename...> typename IntermediateHash, typename ...Inputs>
   static constexpr auto construct_hash() {
-    constexpr std::size_t set_size = sizeof...(Inputs);
-    constexpr auto dict = initialize_dictionary<Inputs...>();
-    constexpr auto keys = dict.first;
-    constexpr auto subsets = dict.second;
+    if constexpr (sizeof...(Inputs) <= 4) {
+      return LinearHash<Inputs...>{};
+    } else {
+      constexpr std::size_t set_size = sizeof...(Inputs);
+      constexpr auto dict = initialize_dictionary<Inputs...>();
+      constexpr auto keys = dict.first;
+      constexpr auto subsets = dict.second;
 
-    constexpr auto disambiguate = [](auto&&... string_list) {
-      // result: pair((hash status, d), values)
-      constexpr auto unique_hash_values = [](auto&& result, auto&& inputs) {
-        auto f = [result](auto&&... s) {
-          auto next_result = get_unique_hash_value<
-                  set_size, 1, std::decay_t<decltype(s)>...>(
-              result.second);
-          return std::pair(
-              append(result.first, next_result.first),
-              concatenate(result.second, next_result.second));
+      constexpr auto disambiguate = [](auto&&... string_list) {
+        // result: pair((hash status, d), values)
+        constexpr auto unique_hash_values = [](auto&& result, auto&& inputs) {
+          auto f = [result](auto&&... s) {
+            auto next_result = get_unique_hash_value<
+                    set_size, 1, std::decay_t<decltype(s)>...>(
+                result.second);
+            return std::pair(
+                append(result.first, next_result.first),
+                concatenate(result.second, next_result.second));
+          };
+          return std::apply(f, inputs);
         };
-        return std::apply(f, inputs);
+
+        return fold_left(
+            unique_hash_values,
+            std::make_pair(std::make_tuple(), std::index_sequence<>{}),
+            string_list...);
       };
+      constexpr auto disambiguated_result = std::apply(disambiguate, subsets);
+      constexpr auto next_keys = disambiguated_result.first;
+      constexpr auto hashed_values = disambiguated_result.second;
 
-      return fold_left(
-          unique_hash_values,
-          std::make_pair(std::make_tuple(), std::index_sequence<>{}),
-          string_list...);
-    };
-    constexpr auto disambiguated_result = std::apply(disambiguate, subsets);
-    constexpr auto next_keys = disambiguated_result.first;
-    constexpr auto hashed_values = disambiguated_result.second;
+      static_assert(unique(hashed_values));
 
-    static_assert(unique(hashed_values));
+      constexpr auto freelist = difference(
+          std::make_index_sequence<set_size>{},
+          hashed_values);
 
-    constexpr auto freelist = difference(
-        std::make_index_sequence<set_size>{},
-        hashed_values);
+      static_assert(hashed_values.size() + freelist.size() == set_size);
 
-    static_assert(hashed_values.size() + freelist.size() == set_size);
+      constexpr auto pop_from_freelist =
+        [next_keys](auto&& result_freelist, auto&& i) {
+          constexpr size_t index = std::decay_t<decltype(i)>::value;
+          constexpr auto status = std::get<index>(next_keys).first;
 
-    constexpr auto pop_from_freelist =
-      [next_keys](auto&& result_freelist, auto&& i) {
-        constexpr size_t index = std::decay_t<decltype(i)>::value;
-        constexpr auto status = std::get<index>(next_keys).first;
+          if constexpr (status == hash_status::Unique) {
+            auto result = result_freelist.first;
+            auto cur_freelist = result_freelist.second;
+            auto freelist_pair = pop_front(cur_freelist);
+            return std::make_pair(
+                insert_at<index>(
+                    result, std::make_pair(status, freelist_pair.first)),
+                freelist_pair.second);
+          } else {
+            return result_freelist;
+          }
+        };
 
-        if constexpr (status == hash_status::Unique) {
-          auto result = result_freelist.first;
-          auto cur_freelist = result_freelist.second;
-          auto freelist_pair = pop_front(cur_freelist);
-          return std::make_pair(
-              insert_at<index>(
-                  result, std::make_pair(status, freelist_pair.first)),
-              freelist_pair.second);
-        } else {
-          return result_freelist;
-        }
-      };
+      constexpr auto assign_result = fold_left(
+          pop_from_freelist,
+          std::make_pair(next_keys, freelist),
+          std::make_index_sequence<tuple_size(next_keys)>{});
+      constexpr auto unique_values = assign_result.first;
 
-    constexpr auto assign_result = fold_left(
-        pop_from_freelist,
-        std::make_pair(next_keys, freelist),
-        std::make_index_sequence<tuple_size(next_keys)>{});
-    constexpr auto unique_values = assign_result.first;
+      // initial values maps to unique values
+      constexpr auto table_callback = [keys, unique_values](auto&& index) {
+          constexpr auto I = map_to_index<std::decay_t<decltype(index)>{}>(keys);
 
-    // initial values maps to unique values
-    constexpr auto table_callback = [keys, unique_values](auto&& index) {
-        constexpr auto I = map_to_index<std::decay_t<decltype(index)>{}>(keys);
-
-        if constexpr (I >= tuple_size(unique_values)) {
-          return std::make_pair(hash_status::Empty, 0);
-        } else {
-          return std::get<I>(unique_values);
-        }
-      };
-    return IntermediateHash<decltype(table_callback),
-                            std::decay_t<decltype(keys)>>{table_callback};
+          if constexpr (I >= tuple_size(unique_values)) {
+            return std::make_pair(hash_status::Empty, 0);
+          } else {
+            return std::get<I>(unique_values);
+          }
+        };
+      return IntermediateHash<decltype(table_callback),
+                              std::decay_t<decltype(keys)>,
+                              std::decay_t<std::pair<hash_status, std::size_t>>
+                              >(
+                                std::move(table_callback),
+                                std::make_pair(hash_status::Empty, 0));
+    }
   }
 
 }  // namespace detail

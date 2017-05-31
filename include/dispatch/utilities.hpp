@@ -48,6 +48,13 @@ namespace utilities {
   template<typename T, typename S>
   using comparable = is_detected<comparable_exp, T, S>;
 
+  // from http://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
+  template<typename Test, template<typename...> class Ref>
+  struct is_specialization : std::false_type {};
+
+  template<template<typename...> class Ref, typename... Args>
+  struct is_specialization<Ref<Args...>, Ref>: std::true_type {};
+
   template<std::size_t... Sequence>
   constexpr auto as_tuple(std::index_sequence<Sequence...>) {
     return std::make_tuple(Sequence...);

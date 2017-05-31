@@ -6,7 +6,7 @@ namespace dispatch {
 
 template<template<typename...> class Hash, typename F, typename ...Strings>
 struct string_dispatch {
-  string_dispatch(F&& callable) : table{callable} { }
+  string_dispatch(F&& callable) : table(callable) { }
 
   SwitchTable<F, std::index_sequence<Hash<Strings...>::hash(Strings{})...>> table;
 

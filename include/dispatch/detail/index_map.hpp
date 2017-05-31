@@ -13,5 +13,12 @@ namespace detail {
       return init_index_map<IndexMap, HashSequence...>(cur_map, i + 1);
     }
   }
+
+  template<typename IndexMap, std::size_t ...HashSequence>
+  static constexpr auto init_index_map(IndexMap cur_map) {
+    static_assert(sizeof...(HashSequence) == std::tuple_size<IndexMap>{});
+
+    return init_index_map<IndexMap, HashSequence...>(cur_map, 0);
+  }
 }  // namespace detail
 }  // namespace dispatch
