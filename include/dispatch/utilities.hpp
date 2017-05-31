@@ -1,6 +1,5 @@
 #pragma once
 
-#include <experimental/type_traits>
 #include <utility>
 #include <tuple>
 
@@ -37,16 +36,6 @@ namespace utilities {
   constexpr auto max_string_length(const Strings&... strs) {
     return max_string_length_recursive<0>(std::make_tuple(strs...));
   }
-
-  template<template<typename ...> typename Op, typename... Args>
-  using is_detected = std::experimental::is_detected<Op, Args...>;
-
-  template<typename T, typename S>
-  using comparable_exp = decltype(
-      std::declval<std::decay_t<T>>() == std::declval<std::decay_t<S>>());
-
-  template<typename T, typename S>
-  using comparable = is_detected<comparable_exp, T, S>;
 
   // from http://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
   template<typename Test, template<typename...> class Ref>

@@ -30,57 +30,55 @@ struct is_string_literal<string_literal<T, Args...>>: std::true_type {};
 template<typename Test>
 struct is_string_literal<Test> : std::false_type {};
 
-template<typename Str>
+template<typename T, T... P>
 struct compare_helper {
   template<size_t... I>
   static constexpr bool apply(const char* v, std::index_sequence<I...>) {
-    return ((Str::char_at(I) == v[I]) && ...);
+    return ((P == v[I]) && ...);
   }
-  template<typename StrB, size_t... I>
-  static constexpr bool apply(std::index_sequence<I...>) {
-    return ((Str::char_at(I) == StrB::char_at(I)) && ...);
+  template<typename S, S... Q>
+  static constexpr bool apply() {
+    return ((P == Q) && ...);
   }
 };
 
-template<typename Str>
-static constexpr bool empty(const Str&) {
-  return Str::size() == 0;
+template<typename T, T... P>
+static constexpr bool empty(const string_literal<T, P...>&) {
+  return sizeof...(P) == 0;
 }
 
-template<typename StrA, typename StrB>
-static constexpr bool equal(const StrA&, const StrB&) {
-  if (StrA::size() != StrB::size()) {
+template<typename T, T... P, typename S, S... Q>
+static constexpr bool equal(
+    const string_literal<T, P...>&, const string_literal<S, Q...>&) {
+  if (sizeof...(P) != sizeof...(Q)) {
     return false;
   } else {
-    return compare_helper<StrA>::template apply<StrB>(std::make_index_sequence<StrA::size()>{});
+    return compare_helper<T, P...>::template apply<S, Q...>(
+        std::make_index_sequence<sizeof...(P)>{});
   }
 }
 
-template<typename Str>
-static constexpr bool equal(const Str&, const char* b) {
-  if (utilities::length(b) != Str::size()) {
+template<typename T, T... P>
+static constexpr bool equal(const string_literal<T, P...>&, const char* b) {
+  if (utilities::length(b) != sizeof...(P)) {
     return false;
   } else {
-    return compare_helper<Str>::apply(
-      b, std::make_index_sequence<Str::size()>{});
+    return compare_helper<T, P...>::apply(b, std::make_index_sequence<sizeof...(P)>{});
   }
 }
 
-template<typename Str,
-  typename std::enable_if_t<is_string_literal<Str>{}>* = nullptr>
-constexpr bool operator==(const Str& a, const char* b) {
+template<typename T, T... P>
+constexpr bool operator==(const string_literal<T, P...>& a, const char* b) {
   return equal(a, b);
 }
 
-template<typename StrA, typename StrB,
-  typename std::enable_if_t<
-    is_string_literal<StrA>{} &&
-    is_string_literal<StrB>{}
-  >* = nullptr>
-constexpr bool operator==(const StrA& a, const StrB& b) {
+template<typename T, T... P, typename S, S... Q>
+constexpr bool operator==(
+    const string_literal<T, P...>& a, const string_literal<S, Q...>& b) {
   return equal(a, b);
 }
 
+// TODO
 // #ifdef DISPATCH_USE_UDL
 namespace literals {
   template<typename T, T ...Pack>

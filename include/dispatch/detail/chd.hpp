@@ -4,7 +4,6 @@
 
 #include "dispatch/linear_hash.hpp"
 #include "dispatch/switch_table.hpp"
-#include "dispatch/string_dispatch.hpp"
 #include "dispatch/string_literal.hpp"
 #include "dispatch/utilities.hpp"
 #include "dispatch/utilities/fold.hpp"

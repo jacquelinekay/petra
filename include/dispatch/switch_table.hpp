@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cassert>
-
 #include "dispatch/utilities.hpp"
 #include "dispatch/utilities/sequence.hpp"
 

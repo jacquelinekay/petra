@@ -6,19 +6,6 @@ include(cmake/dispatch_add_executable.cmake)
 
 include_directories(include)
 
-
-# TODO: will probably take this out unless performance is drastically better
-# Find `vrm_pp`:
-if(BUILD_BENCHMARKS)
-    vrm_cmake_find_extlib(vrm_pp)
-
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/extlibs/vrm_cmake/cmake/")
-    include(vrm_cmake)
-
-    add_executable(macro_switch_table src/macro_switch_table.cpp)
-    target_include_directories(macro_switch_table PUBLIC ${VRM_PP_INC_DIR})
-endif()
-
 # Examples
 dispatch_add_executable(switch_table src/switch_table.cpp)
 dispatch_add_executable(string_hash src/string_hash.cpp)
@@ -33,17 +20,16 @@ dispatch_add_executable(string_hash_test test/string_hash.cpp)
 dispatch_add_executable(switch_table_test test/switch_table.cpp)
 
 
-# Generate benchmarks: better reports
-if(BUILD_BENCHMARKS)
-    add_custom_target(benchmarks)
-
-    foreach(N RANGE 5 50 5)
-      dispatch_add_benchmark(simple_string_hash
-          ${N} 7 1000000
-          ${CMAKE_BINARY_DIR}/generated/simple_benchmark)
-      dispatch_add_benchmark(naive_string_hash
-          ${N} 7 1000000
-          ${CMAKE_BINARY_DIR}/generated/naive_benchmark -DNAIVE)
-endforeach()
-
-endif()
+#if(BUILD_BENCHMARKS)
+#    add_custom_target(benchmarks)
+#
+#    foreach(N RANGE 5 50 5)
+#      dispatch_add_benchmark(simple_string_hash
+#          ${N} 7 1000000
+#          ${CMAKE_BINARY_DIR}/generated/simple_benchmark)
+#      dispatch_add_benchmark(naive_string_hash
+#          ${N} 7 1000000
+#          ${CMAKE_BINARY_DIR}/generated/naive_benchmark -DNAIVE)
+#endforeach()
+#
+#endif()

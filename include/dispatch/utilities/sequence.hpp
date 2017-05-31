@@ -1,6 +1,7 @@
 #pragma once
 
 #include <utility>
+#include "dispatch/concepts.hpp"
 #include "dispatch/utilities.hpp"
 
 namespace dispatch {
@@ -60,7 +61,7 @@ namespace dispatch {
   // check if the first element is in the following sequence
   template<typename Integral, typename T, typename... Ts>
   constexpr bool in_sequence(const Integral& i, const T& t, const Ts&... ts) {
-    if constexpr (utilities::comparable<Integral, T>{}) {
+    if constexpr (Comparable<Integral, T>()) {
       if (i == t) {
         return true;
       }
