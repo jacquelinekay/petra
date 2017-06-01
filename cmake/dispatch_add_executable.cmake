@@ -5,6 +5,10 @@ function(dispatch_add_executable executable_name filename)
     target_compile_options(${executable_name} PUBLIC "-std=c++1z")
     target_include_directories(${executable_name} PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
-    # TODO XXX
-    target_compile_options(${executable_name} PUBLIC "-fcolor-diagnostics;-Wall;-Wextra;-Werror;-Wno-gnu-string-literal-operator-template;-DDISPATCH_USE_UDL")
+    target_compile_options(${executable_name} PUBLIC "-Wall;-Wextra;-Werror")
+
+    if (DISPATCH_USE_UDL)
+        target_compile_options(${executable_name} PUBLIC
+            "-Wno-gnu-string-literal-operator-template;-DDISPATCH_USE_UDL")
+    endif()
 endfunction()
