@@ -1,4 +1,5 @@
 #include "dispatch/switch_table.hpp"
+#include "dispatch/utilities/sequence.hpp"
 
 #include "utilities.hpp"
 
@@ -11,8 +12,10 @@ struct test {
   template<std::size_t N>
   void operator()(std::integral_constant<std::size_t, N>&&) {
     std::cout << N << std::endl;
-    ++results[N];
-    DISPATCH_ASSERT(results[N] == 1);
+    constexpr std::size_t Index = dispatch::map_to_index<N>(TestSet{});
+    DISPATCH_ASSERT(Index < TestSet::size());
+    ++results[Index];
+    DISPATCH_ASSERT(results[Index] == 1);
   }
 
   std::array<std::size_t, TestSet::size()> results = {{0}};

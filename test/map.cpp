@@ -56,5 +56,6 @@ int main() {
   for (std::size_t i = 0; i < map_size; ++i) {
     DISPATCH_ASSERT(results[i] == 1);
   }
+  return 0;
 }
 
