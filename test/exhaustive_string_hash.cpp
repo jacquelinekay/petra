@@ -35,7 +35,7 @@ auto prepare_keyword_hashes(const std::array<const char*, I>& keywords) {
 
 template<typename Table, typename TestStrings, std::size_t... Length>
 void hash_all_strings(Table&& table, const TestStrings& test_strings, std::index_sequence<Length...>&&) {
-  constexpr auto N = dispatch::test_utils::set_size;
+  constexpr auto N = petra::test_utils::set_size;
   // auto keyword_hashes = prepare_keyword_hashes<N>(test_strings);
 
   ([&table, &test_strings]() {
@@ -57,16 +57,16 @@ void hash_all_strings(Table&& table, const TestStrings& test_strings, std::index
 }
 
 int main() {
-  using namespace dispatch::test_utils;
+  using namespace petra::test_utils;
   constexpr auto string_constants = example_constants();
 
   auto test_strings = example_test_strings();
 
-  auto string_dispatch_table = dispatch_table_from_tuple(string_constants);
+  auto string_petra_table = petra_table_from_tuple(string_constants);
 
   constexpr auto max_length = max_string_length_tuple(string_constants);
 
-  hash_all_strings(string_dispatch_table, test_strings, std::make_index_sequence<max_length>{});
+  hash_all_strings(string_petra_table, test_strings, std::make_index_sequence<max_length>{});
 
   /*
   for (const auto result : results) {

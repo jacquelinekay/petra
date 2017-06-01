@@ -2,19 +2,19 @@
 
 #include <utility>
 
-namespace dispatch {
+namespace petra {
 
-#define DISPATCH_RECURSIVE_SWITCH_TABLE_RETURNS() \
+#define PETRA_RECURSIVE_SWITCH_TABLE_RETURNS() \
   callable(std::integral_constant<std::size_t, I>{}, \
            std::forward<Args>(args)...)
 
-#define DISPATCH_RECURSIVE_SWITCH_TABLE_APPLY_BODY() \
+#define PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY() \
   using Result = std::result_of_t<F( \
     std::integral_constant<std::size_t, I>, Args...)>; \
   if constexpr (I < N) { \
     switch(i) { \
       case I: \
-        return DISPATCH_RECURSIVE_SWITCH_TABLE_RETURNS(); \
+        return PETRA_RECURSIVE_SWITCH_TABLE_RETURNS(); \
       default: \
         return apply<I + 1>(i, std::forward<Args>(args)...); \
     } \
@@ -27,7 +27,7 @@ namespace dispatch {
   } \
 
 
-#define DISPATCH_NOEXCEPT_FUNCTION_BODY(...) \
+#define PETRA_NOEXCEPT_FUNCTION_BODY(...) \
   noexcept(noexcept(__VA_ARGS__)) { \
     return __VA_ARGS__; \
   } \
@@ -54,39 +54,39 @@ namespace dispatch {
 
     template<std::size_t I, typename ...Args>
     constexpr auto apply(std::size_t i, Args&&... args)
-    noexcept(noexcept(DISPATCH_RECURSIVE_SWITCH_TABLE_RETURNS()))
+    noexcept(noexcept(PETRA_RECURSIVE_SWITCH_TABLE_RETURNS()))
     {
-      DISPATCH_RECURSIVE_SWITCH_TABLE_APPLY_BODY()
+      PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY()
     }
 
     template<std::size_t I, typename ...Args>
     constexpr auto apply(std::size_t i, Args&&... args) const
-    noexcept(noexcept(DISPATCH_RECURSIVE_SWITCH_TABLE_RETURNS()))
+    noexcept(noexcept(PETRA_RECURSIVE_SWITCH_TABLE_RETURNS()))
     {
-      DISPATCH_RECURSIVE_SWITCH_TABLE_APPLY_BODY()
+      PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY()
     }
 
     template<typename ...Args>
     constexpr auto operator()(std::size_t i, Args&&... args) const
-    DISPATCH_NOEXCEPT_FUNCTION_BODY(apply<0>(i, std::forward<Args>(args)...))
+    PETRA_NOEXCEPT_FUNCTION_BODY(apply<0>(i, std::forward<Args>(args)...))
 
     template<typename ...Args>
     constexpr auto operator()(std::size_t i, Args&&... args)
-    DISPATCH_NOEXCEPT_FUNCTION_BODY(apply<0>(i, std::forward<Args>(args)...))
+    PETRA_NOEXCEPT_FUNCTION_BODY(apply<0>(i, std::forward<Args>(args)...))
 
   };
 
   template<std::size_t N, typename F>
   constexpr decltype(auto) make_sequential_table(F&& f)
-  DISPATCH_NOEXCEPT_FUNCTION_BODY(SequentialTable<F, N>{std::forward<F>(f)});
+  PETRA_NOEXCEPT_FUNCTION_BODY(SequentialTable<F, N>{std::forward<F>(f)});
 
   template<std::size_t N, typename F, typename ErrorType>
   constexpr decltype(auto) make_sequential_table(F&& f, ErrorType&& error_value)
-  DISPATCH_NOEXCEPT_FUNCTION_BODY(SequentialTable<F, N, ErrorType>{
+  PETRA_NOEXCEPT_FUNCTION_BODY(SequentialTable<F, N, ErrorType>{
       std::forward<F>(f), std::forward<ErrorType>(error_value)});
 
-#undef DISPATCH_RECURSIVE_SWITCH_TABLE_RETURNS
-#undef DISPATCH_NOEXCEPT_FUNCTION_BODY
-#undef DISPATCH_RECURSIVE_SWITCH_TABLE_APPLY_BODY
+#undef PETRA_RECURSIVE_SWITCH_TABLE_RETURNS
+#undef PETRA_NOEXCEPT_FUNCTION_BODY
+#undef PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY
 
-}  // namespace dispatch
+}  // namespace petra

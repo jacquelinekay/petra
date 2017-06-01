@@ -1,6 +1,6 @@
 #pragma once
 
-namespace dispatch {
+namespace petra {
 namespace detail {
   template<typename T, T ...Pack>
   struct string_literal;
@@ -23,4 +23,4 @@ namespace detail {
   }
 
 }  // namespace detail
-}  // namespace dispatch
+}  // namespace petra

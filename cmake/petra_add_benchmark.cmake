@@ -1,16 +1,16 @@
-function(dispatch_add_benchmark benchmark_name N M T output_prefix)
+function(petra_add_benchmark benchmark_name N M T output_prefix)
     set(output "${output_prefix}_${N}_${T}.cpp")
     set(full_name "${benchmark_name}_${N}_${T}")
     add_custom_command(
         OUTPUT ${full_name}_generated_ ${output}
         COMMAND python3 ${CMAKE_SOURCE_DIR}/benchmarks/generate_benchmark.py
             ${N} ${M} ${T}
-            --in_filename ${CMAKE_SOURCE_DIR}/benchmarks/string_dispatch.cpp.empy
+            --in_filename ${CMAKE_SOURCE_DIR}/benchmarks/string_petra.cpp.empy
             --out_filename ${output}
         COMMAND ${CMAKE_COMMAND} -E touch ${full_name}_generated_
         DEPENDS
         ${CMAKE_SOURCE_DIR}/benchmarks/generate_benchmark.py
-        ${CMAKE_SOURCE_DIR}/benchmarks/string_dispatch.cpp.empy
+        ${CMAKE_SOURCE_DIR}/benchmarks/string_petra.cpp.empy
     )
     add_custom_target(${full_name}_generated DEPENDS ${full_name}_generated_)
 

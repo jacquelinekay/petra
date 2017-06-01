@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dispatch/concepts.hpp"
+#include "petra/concepts.hpp"
 
 #include <tuple>
 #include <utility>
@@ -10,7 +10,7 @@
  * acceptable.
  * */
 
-namespace dispatch {
+namespace petra {
 
   template<typename... Inputs>
   struct LinearHash {
@@ -47,4 +47,4 @@ namespace dispatch {
     return LinearHash<Inputs...>{};
   }
 
-}  // namespace dispatch
+}  // namespace petra

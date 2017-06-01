@@ -1,12 +1,12 @@
 #pragma once
 
-#include "dispatch/concepts.hpp"
-#include "dispatch/detail/index_map.hpp"
-#include "dispatch/chd.hpp"
-#include "dispatch/sequential_table.hpp"
+#include "petra/concepts.hpp"
+#include "petra/detail/index_map.hpp"
+#include "petra/chd.hpp"
+#include "petra/sequential_table.hpp"
 
 
-namespace dispatch {
+namespace petra {
   /* A callback table with heterogeneous keys known at compile time.
    * The return type of the callbacks must be uniform.
    * */
@@ -101,4 +101,4 @@ namespace dispatch {
     return CallbackTable<SwitchTable, F, K>(std::move(result.second));
   }
 
-}  // namespace dispatch
+}  // namespace petra

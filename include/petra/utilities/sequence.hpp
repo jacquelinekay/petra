@@ -1,10 +1,10 @@
 #pragma once
 
 #include <utility>
-#include "dispatch/concepts.hpp"
-#include "dispatch/utilities.hpp"
+#include "petra/concepts.hpp"
+#include "petra/utilities.hpp"
 
-namespace dispatch {
+namespace petra {
 
   template<size_t I, size_t ...Sequence, size_t ...Indices>
   constexpr unsigned access_sequence_helper(
@@ -142,4 +142,4 @@ namespace dispatch {
     return (!in_sequence(I, J...) && ...);
   }
 
-}  // namespace dispatch
+}  // namespace petra

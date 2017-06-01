@@ -1,11 +1,11 @@
 #include <iostream>
-#include "dispatch/callback_table.hpp"
-#include "dispatch/string_literal.hpp"
+#include "petra/callback_table.hpp"
+#include "petra/string_literal.hpp"
 
 int main() {
-  using namespace dispatch::literals;
+  using namespace petra::literals;
 
-  auto table = dispatch::make_callback_table(
+  auto table = petra::make_callback_table(
       // std::make_tuple("square"_s, "circle"_s, "triangle"_s, "capsule"_s, "hexagon"_s),
       std::make_tuple(
           "square"_s, "circle"_s,

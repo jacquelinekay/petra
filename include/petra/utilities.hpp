@@ -3,9 +3,9 @@
 #include <utility>
 #include <tuple>
 
-#include "dispatch/utilities/fold.hpp"
+#include "petra/utilities/fold.hpp"
 
-namespace dispatch {
+namespace petra {
 namespace utilities {
 
   constexpr unsigned length(const char* str) {
@@ -84,4 +84,4 @@ namespace utilities {
   */
 
 }  // namespace utilities
-}  // namespace dispatch
+}  // namespace petra

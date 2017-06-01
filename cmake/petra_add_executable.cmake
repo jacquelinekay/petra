@@ -1,4 +1,4 @@
-function(dispatch_add_executable executable_name filename)
+function(petra_add_executable executable_name filename)
     add_executable(${executable_name} ${filename})
     set_property(TARGET ${executable_name} PROPERTY CXX_STANDARD 17)
     set_property(TARGET ${executable_name} PROPERTY CXX_STANDARD_REQUIRED ON)
@@ -7,8 +7,8 @@ function(dispatch_add_executable executable_name filename)
 
     target_compile_options(${executable_name} PUBLIC "-Wall;-Wextra;-Werror")
 
-    if (DISPATCH_USE_UDL)
+    if (PETRA_USE_UDL)
         target_compile_options(${executable_name} PUBLIC
-            "-Wno-gnu-string-literal-operator-template;-DDISPATCH_USE_UDL")
+            "-Wno-gnu-string-literal-operator-template;-DPETRA_USE_UDL")
     endif()
 endfunction()

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "dispatch/utilities/fold.hpp"
+#include "petra/utilities/fold.hpp"
 #include <tuple>
 
-namespace dispatch {
+namespace petra {
 namespace detail {
 
 }  // namespace detail
@@ -79,4 +79,4 @@ namespace detail {
         split_on_index<1>(pairs...));
   }
 
-}  // namespace dispatch
+}  // namespace petra

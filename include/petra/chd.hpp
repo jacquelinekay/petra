@@ -1,9 +1,9 @@
 #pragma once
 
-#include "dispatch/detail/chd.hpp"
-#include "dispatch/utilities/sequence.hpp"
+#include "petra/detail/chd.hpp"
+#include "petra/utilities/sequence.hpp"
 
-namespace dispatch {
+namespace petra {
 
   template<template<typename...> typename IntermediateHash, typename ...Inputs>
   struct CHDHash {
@@ -70,4 +70,4 @@ namespace dispatch {
     return CHDHash<SwitchTable, std::decay_t<A>, std::decay_t<Args>...>{};
   }
 
-}  // namespace dispatch
+}  // namespace petra

@@ -1,7 +1,7 @@
 #pragma once
 
-namespace dispatch {
+namespace petra {
 namespace detail {
 
 }  // namespace detail
-}  // namespace dispatch
+}  // namespace petra

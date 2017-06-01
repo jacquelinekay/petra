@@ -1,19 +1,19 @@
 cmake_minimum_required(VERSION 3.5)
-project(dispatch)
+project(petra)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-add_library(dispatch INTERFACE)
-target_include_directories(dispatch INTERFACE include)
+add_library(petra INTERFACE)
+target_include_directories(petra INTERFACE include)
 
-option(DISPATCH_USE_UDL
+option(PETRA_USE_UDL
        "Enable GNU string literal operator template extension."
        ON)
 
-option(DISPATCH_BUILD_TESTS "Build tests." ON)
+option(PETRA_BUILD_TESTS "Build tests." ON)
 
 add_subdirectory(examples)
 
-if(DISPATCH_BUILD_TESTS)
+if(PETRA_BUILD_TESTS)
     include(CTest)
     add_subdirectory(test)
 endif()

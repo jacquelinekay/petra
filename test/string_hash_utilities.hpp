@@ -1,20 +1,20 @@
 #pragma once
 
-#include "dispatch/simple_string_hash.hpp"
-#include "dispatch/string_dispatch.hpp"
+#include "petra/simple_string_hash.hpp"
+#include "petra/string_petra.hpp"
 
 #include <iostream>
 #include <iostream>
 #include <tuple>
 
-namespace dispatch {
+namespace petra {
 namespace test_utils {
 
 // Shared utilities for testing string hash
 // TODO: Clean up the globals into a shared context
 static constexpr size_t set_size = 10;
 
-using namespace dispatch::literals;
+using namespace petra::literals;
 
 constexpr auto example_constants() {
   return std::make_tuple(
@@ -59,17 +59,17 @@ struct test {
 };
 
 template<typename T, size_t... I>
-constexpr auto dispatch_table_from_tuple_helper(
+constexpr auto petra_table_from_tuple_helper(
     const T&, std::index_sequence<I...>&&) {
-  return make_string_dispatch<simple_string_hash, test>(
+  return make_string_petra<simple_string_hash, test>(
     test{},
     std::tuple_element_t<I, T>{}...
   );
 }
 
 template<typename T>
-constexpr auto dispatch_table_from_tuple(const T& strings) {
-  return dispatch_table_from_tuple_helper(
+constexpr auto petra_table_from_tuple(const T& strings) {
+  return petra_table_from_tuple_helper(
       strings, std::make_index_sequence<std::tuple_size<T>{}>{});
 }
 
@@ -123,4 +123,4 @@ constexpr bool unique_hashes(
 
 
 }  // namespace test_utils
-}  // namespace dispatch
+}  // namespace petra

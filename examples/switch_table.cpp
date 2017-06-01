@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "dispatch/switch_table.hpp"
+#include "petra/switch_table.hpp"
 
 struct printer {
   template<std::size_t N>
@@ -15,6 +15,6 @@ int main(int argc, char** argv) {
   }
   const int index = atoi(argv[1]);
 
-  auto switch_table = dispatch::make_switch_table<100, 42, 8, 0>(printer{});
+  auto switch_table = petra::make_switch_table<100, 42, 8, 0>(printer{});
   switch_table(index);
 }

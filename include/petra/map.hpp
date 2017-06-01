@@ -1,13 +1,13 @@
 #pragma once
 
-#include "dispatch/chd.hpp"
-#include "dispatch/sequential_table.hpp"
-#include "dispatch/detail/index_map.hpp"
-#include "dispatch/utilities/tuple.hpp"
+#include "petra/chd.hpp"
+#include "petra/sequential_table.hpp"
+#include "petra/detail/index_map.hpp"
+#include "petra/utilities/tuple.hpp"
 
 #include <type_traits>
 
-namespace dispatch {
+namespace petra {
   /* A heterogenous map with frozen keys known at compile time.
    * Allows runtime lookup.
    * Types of values are fixed at compile time, but values are mutable.
@@ -43,7 +43,7 @@ namespace dispatch {
           values,
           std::forward<Visitor>(visitor),
           [](){
-            throw std::runtime_error("Got invalid index in dispatch::map::visit");
+            throw std::runtime_error("Got invalid index in petra::map::visit");
           });
     }
 
@@ -149,4 +149,4 @@ namespace dispatch {
     return make_map(std::move(result.first), std::move(result.second));
   }
 
-}  // namespace dispatch
+}  // namespace petra

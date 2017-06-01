@@ -1,7 +1,7 @@
-#include "dispatch/callback_table.hpp"
+#include "petra/callback_table.hpp"
 #include "utilities.hpp"
 
-using namespace dispatch::literals;
+using namespace petra::literals;
 
 int main() {
   constexpr auto keys = std::make_tuple(
@@ -37,7 +37,7 @@ int main() {
       return append(result, std::make_pair(
           key,
           [&key, &test_strings, &results](auto&& i){
-            DISPATCH_ASSERT(key == test_strings[i]);
+            PETRA_ASSERT(key == test_strings[i]);
             ++results[i];
           }));
     };
@@ -46,7 +46,7 @@ int main() {
 
   bool errored = false;
 
-  auto table = dispatch::make_callback_table(
+  auto table = petra::make_callback_table(
       std::apply(make_callback_pairs, keys),
       [&errored](auto&&...) {
         errored = true;
@@ -54,7 +54,7 @@ int main() {
 
   for (std::size_t i = 0; i < set_size; ++i) {
     table.trigger(test_strings[i], i);
-    DISPATCH_ASSERT(results[i] == 1);
+    PETRA_ASSERT(results[i] == 1);
   }
 
   return 0;

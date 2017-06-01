@@ -2,7 +2,7 @@
 
 #include <array>
 
-namespace dispatch {
+namespace petra {
 namespace detail {
   template<typename IndexMap, std::size_t X, std::size_t ...HashSequence>
   static constexpr auto init_index_map(IndexMap cur_map, std::size_t i) {
@@ -21,4 +21,4 @@ namespace detail {
     return init_index_map<IndexMap, HashSequence...>(cur_map, 0);
   }
 }  // namespace detail
-}  // namespace dispatch
+}  // namespace petra

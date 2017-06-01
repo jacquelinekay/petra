@@ -2,15 +2,15 @@
 
 #include <tuple>
 
-#include "dispatch/linear_hash.hpp"
-#include "dispatch/switch_table.hpp"
-#include "dispatch/string_literal.hpp"
-#include "dispatch/utilities.hpp"
-#include "dispatch/utilities/fold.hpp"
-#include "dispatch/utilities/sequence.hpp"
-#include "dispatch/utilities/tuple.hpp"
+#include "petra/linear_hash.hpp"
+#include "petra/switch_table.hpp"
+#include "petra/string_literal.hpp"
+#include "petra/utilities.hpp"
+#include "petra/utilities/fold.hpp"
+#include "petra/utilities/sequence.hpp"
+#include "petra/utilities/tuple.hpp"
 
-namespace dispatch {
+namespace petra {
 // Customization point for user-provided hashable types
 
 static constexpr inline std::size_t chd_offset = 0x01000193;
@@ -202,4 +202,4 @@ namespace detail {
   }
 
 }  // namespace detail
-}  // namespace dispatch
+}  // namespace petra

@@ -9,4 +9,4 @@
 
 #endif
 
-#define DISPATCH_ASSERT(...) assert(__VA_ARGS__)
+#define PETRA_ASSERT(...) assert(__VA_ARGS__)

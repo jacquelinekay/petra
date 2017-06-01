@@ -1,21 +1,21 @@
-#include "dispatch/map.hpp"
-#include "dispatch/string_literal.hpp"
+#include "petra/map.hpp"
+#include "petra/string_literal.hpp"
 
 #include <iostream>
 #include <vector>
 
-using namespace dispatch::literals;
+using namespace petra::literals;
 
 template<typename T>
 using printable_t = decltype(std::cout << std::declval<T>());
 
 template<typename T>
 static constexpr bool Printable() {
-  return dispatch::is_detected<printable_t, T>{};
+  return petra::is_detected<printable_t, T>{};
 }
 
 int main() {
-  auto example_map = dispatch::make_map(
+  auto example_map = petra::make_map(
     std::make_tuple(
       "abc"_s,
       "foo"_s,

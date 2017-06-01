@@ -1,4 +1,4 @@
-#include "dispatch/sequential_table.hpp"
+#include "petra/sequential_table.hpp"
 
 #include "utilities.hpp"
 
@@ -12,7 +12,7 @@ struct test {
   void operator()(std::integral_constant<std::size_t, N>&&) {
     std::cout << N << std::endl;
     ++results[N];
-    DISPATCH_ASSERT(results[N] == 1);
+    PETRA_ASSERT(results[N] == 1);
   }
 
   std::array<std::size_t, Size> results = {{0}};
@@ -28,17 +28,17 @@ void run_test(S&& table) {
 
 int main() {
   {
-    run_test(dispatch::make_sequential_table<Size>(test{}));
+    run_test(petra::make_sequential_table<Size>(test{}));
   }
 
   {
     constexpr auto test_with_error = [](auto&& i) {
       return std::decay_t<decltype(i)>::value;
     };
-    auto table = dispatch::make_sequential_table<Size>(test_with_error, Size);
+    auto table = petra::make_sequential_table<Size>(test_with_error, Size);
     // run_test(table);
     // Try with an integer not in the set
-    DISPATCH_ASSERT(table(20) == Size);
+    PETRA_ASSERT(table(20) == Size);
   }
 
   return 0;

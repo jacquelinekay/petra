@@ -2,7 +2,7 @@
 
 #include <utility>
 
-namespace dispatch {
+namespace petra {
 
   template<typename F, typename X>
   struct fold_wrapper {
@@ -31,4 +31,4 @@ namespace dispatch {
     return result.state;
   }
 
-}  // namespace dispatch
+}  // namespace petra

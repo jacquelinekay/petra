@@ -1,5 +1,5 @@
-#include "dispatch/switch_table.hpp"
-#include "dispatch/utilities/sequence.hpp"
+#include "petra/switch_table.hpp"
+#include "petra/utilities/sequence.hpp"
 
 #include "utilities.hpp"
 
@@ -12,10 +12,10 @@ struct test {
   template<std::size_t N>
   void operator()(std::integral_constant<std::size_t, N>&&) {
     std::cout << N << std::endl;
-    constexpr std::size_t Index = dispatch::map_to_index<N>(TestSet{});
-    DISPATCH_ASSERT(Index < TestSet::size());
+    constexpr std::size_t Index = petra::map_to_index<N>(TestSet{});
+    PETRA_ASSERT(Index < TestSet::size());
     ++results[Index];
-    DISPATCH_ASSERT(results[Index] == 1);
+    PETRA_ASSERT(results[Index] == 1);
   }
 
   std::array<std::size_t, TestSet::size()> results = {{0}};
@@ -33,17 +33,17 @@ void run_test(std::index_sequence<I...>, S&& table) {
 
 int main() {
   {
-    run_test<TestSet>(dispatch::make_switch_table(test{}, TestSet{}));
+    run_test<TestSet>(petra::make_switch_table(test{}, TestSet{}));
   }
 
   {
     constexpr auto test_with_error = [](auto&& i) {
       return std::decay_t<decltype(i)>::value;
     };
-    auto table = dispatch::make_switch_table(test_with_error, TestSet{}, TestSet::size());
+    auto table = petra::make_switch_table(test_with_error, TestSet{}, TestSet::size());
     // run_test(table);
     // Try with an integer not in the set
-    DISPATCH_ASSERT(table(33) == TestSet::size());
+    PETRA_ASSERT(table(33) == TestSet::size());
   }
   return 0;
 }

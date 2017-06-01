@@ -1,10 +1,10 @@
 #include <iostream>
 
-#include "dispatch/chd.hpp"
-#include "dispatch/string_literal.hpp"
-#include "dispatch/utilities.hpp"
+#include "petra/chd.hpp"
+#include "petra/string_literal.hpp"
+#include "petra/utilities.hpp"
 
-using namespace dispatch::literals;
+using namespace petra::literals;
 
 struct printer {
   template<std::size_t N>
@@ -14,7 +14,7 @@ struct printer {
 };
 
 int main() {
-  constexpr auto x = dispatch::make_chd("hello"_s,
+  constexpr auto x = petra::make_chd("hello"_s,
       "goodbye"_s,
       "dog"_s,
       "fish"_s,

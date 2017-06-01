@@ -6,12 +6,12 @@
 #include <cstring>
 
 
-#include "dispatch/detail/string_literal.hpp"
-#include "dispatch/utilities/fold.hpp"
-#include "dispatch/utilities/sequence.hpp"
-#include "dispatch/utilities/tuple.hpp"
+#include "petra/detail/string_literal.hpp"
+#include "petra/utilities/fold.hpp"
+#include "petra/utilities/sequence.hpp"
+#include "petra/utilities/tuple.hpp"
 
-namespace dispatch {
+namespace petra {
 
 template<typename T, T ...Pack>
 struct string_literal {
@@ -68,17 +68,17 @@ constexpr bool operator==(
   return equal(a, b);
 }
 
-#define DISPATCH_STRING_LITERAL(Value) \
+#define PETRA_STRING_LITERAL(Value) \
   []() { \
     struct tmp { \
       static constexpr decltype(auto) data() { return Value; } \
       static constexpr auto char_at(unsigned i) { return data()[i]; }; \
     }; \
-    return dispatch::detail::from_string_literal( \
+    return petra::detail::from_string_literal( \
         tmp{}, std::make_index_sequence<sizeof(Value)>{}); \
   }() \
 
-#ifdef DISPATCH_USE_UDL
+#ifdef PETRA_USE_UDL
 namespace literals {
   template<typename T, T ...Pack>
   constexpr auto operator"" _s() {
@@ -87,4 +87,4 @@ namespace literals {
 }  // namespace literals
 #endif
 
-}  // namespace dispatch
+}  // namespace petra

@@ -1,6 +1,6 @@
-#include "dispatch/simple_string_hash.hpp"
-#include "dispatch/naive_string_hash.hpp"
-#include "dispatch/string_dispatch.hpp"
+#include "petra/simple_string_hash.hpp"
+#include "petra/naive_string_hash.hpp"
+#include "petra/string_petra.hpp"
 #include <iostream>
 
 #define ITERATIONS @(T)
@@ -18,7 +18,7 @@ int main() {
 #ifdef NAIVE
     make_naive_string_hash
 #else
-    make_string_dispatch<simple_string_hash>
+    make_string_petra<simple_string_hash>
 #endif
   (
     printer{},

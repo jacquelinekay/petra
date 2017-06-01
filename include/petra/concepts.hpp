@@ -3,7 +3,7 @@
 #include <iostream>
 #include <tuple>
 
-namespace dispatch {
+namespace petra {
 
   template<template<typename ...> typename Op, typename... Args>
   using is_detected = std::experimental::is_detected<Op, Args...>;
@@ -44,4 +44,4 @@ namespace dispatch {
       std::bool_constant<Comparable<T, decltype(T::data())>()>>{};
   }
 
-}  // namespace dispatch
+}  // namespace petra

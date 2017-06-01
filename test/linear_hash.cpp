@@ -1,5 +1,5 @@
-#include "dispatch/linear_hash.hpp"
-#include "dispatch/string_literal.hpp"
+#include "petra/linear_hash.hpp"
+#include "petra/string_literal.hpp"
 
 #include "utilities.hpp"
 
@@ -7,7 +7,7 @@
 
 static constexpr size_t set_size = 10;
 
-using namespace dispatch::literals;
+using namespace petra::literals;
 
 int main() {
 
@@ -26,7 +26,7 @@ int main() {
     "oof"
   }};
 
-  auto string_hash = dispatch::make_linear_hash(
+  auto string_hash = petra::make_linear_hash(
     "asdf"_s,
     "qwerty"_s,
     "quux"_s,
@@ -43,7 +43,7 @@ int main() {
     std::size_t N = string_hash(s);
     std::cout << N << "\n";
     ++results[N];
-    DISPATCH_ASSERT(results[N] == 1);
+    PETRA_ASSERT(results[N] == 1);
   }
 
   std::cout << "All string hash tests passed.\n";
