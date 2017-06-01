@@ -40,7 +40,7 @@ Petra's utilities include:
 
 - `switch_table.hpp`: Given an integer sequence at compile-time, constructs a constexpr mapping from an integer value to the `std::integral_constant` representing the same value, so that a (possibly runtime-determined) integer value can be used in a template context.
 - `sequential_table.hpp`: A specialization of `switch_table` for sequential integers.
-- `chd.hpp`: Given a set of strings at compile time, constructs a hash from a `const char*` to an integer index with constant runtime complexity. (Petra also provides its own compile-time string class.) Petra's interface supports heterogenous types in the input set; that is, you could hash a set containing both strings and integers. `chd` also has customization points for computing a hash for a user-provided type.
+- `chd.hpp`: Given a set of strings at compile time, constructs a hash from a `const char*` to an integer index with constant runtime complexity. (Petra also provides its own compile-time string class.) Petra's interface supports heterogenous types in the input set; that is, you could hash a set containing both strings and integers. `chd` also has customization points for computing a hash for a user-provided type. The algorithm is based heavily on Steve Hanov's implementation in his [blog post](http://stevehanov.ca/blog/index.php?id=119).
 - `linear_hash.hpp`: A linear time complexity hash meant to be used as a fallback for `chd` when given small input sets, which it cannot handle.
 - `callback_table.hpp`: Building on `chd` and `sequential_table`, a system for triggering callbacks given a heterogenous set of inputs.
 - `map.hpp`: A heterogenous map with variant-like access.
