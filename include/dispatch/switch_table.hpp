@@ -85,16 +85,23 @@ namespace dispatch {
     SwitchTable<F, std::index_sequence<Sequence...>>(std::forward<F>(f))
   )
 
-  template<typename F, typename IndexSeq>
-  static constexpr decltype(auto) make_switch_table(F&& f, IndexSeq)
+  template<typename F, std::size_t ...I>
+  static constexpr decltype(auto) make_switch_table(F&& f, std::index_sequence<I...>&&)
   DISPATCH_NOEXCEPT_FUNCTION_BODY(
-    SwitchTable<F, IndexSeq>(std::forward<F>(f))
+    SwitchTable<F, std::index_sequence<I...>>(std::forward<F>(f))
   )
 
-  template<typename F, typename IndexSeq, typename ErrorType>
-  static constexpr decltype(auto) make_switch_table(F&& f, IndexSeq, ErrorType&& error_value)
+  template<std::size_t ...Sequence, typename F, typename E>
+  static constexpr decltype(auto) make_switch_table(F&& f, E&& e)
   DISPATCH_NOEXCEPT_FUNCTION_BODY(
-    SwitchTable<F, IndexSeq>(std::forward<F>(f), std::forward<ErrorType>(error_value))
+    SwitchTable<F, std::index_sequence<Sequence...>, E>(
+        std::forward<F>(f), std::forward<E>(e))
+  )
+
+  template<typename F, typename IndexSeq, typename E>
+  static constexpr decltype(auto) make_switch_table(F&& f, IndexSeq, E&& e)
+  DISPATCH_NOEXCEPT_FUNCTION_BODY(
+    SwitchTable<F, IndexSeq, E>(std::forward<F>(f), std::forward<E>(e))
   )
 
 #undef DISPATCH_RECURSIVE_SWITCH_TABLE_APPLY_BODY

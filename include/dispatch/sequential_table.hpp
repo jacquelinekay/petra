@@ -29,7 +29,7 @@ namespace dispatch {
     return __VA_ARGS__; \
   } \
 
-  // Conceptually, an optimization of SwitchTable for a sequential set of integers
+  // A specializaion of SwitchTable for a sequential set of integers
   template<typename F, std::size_t N, typename ErrorType = void*>
   struct SequentialTable {
     F callable;
@@ -50,25 +50,25 @@ namespace dispatch {
     }
 
     template<std::size_t I, typename ...Args>
-    constexpr decltype(auto) apply(std::size_t i, Args&&... args)
+    constexpr auto apply(std::size_t i, Args&&... args)
     noexcept(noexcept(DISPATCH_RECURSIVE_SWITCH_TABLE_RETURNS()))
     {
       DISPATCH_RECURSIVE_SWITCH_TABLE_APPLY_BODY()
     }
 
     template<std::size_t I, typename ...Args>
-    constexpr decltype(auto) apply(std::size_t i, Args&&... args) const
+    constexpr auto apply(std::size_t i, Args&&... args) const
     noexcept(noexcept(DISPATCH_RECURSIVE_SWITCH_TABLE_RETURNS()))
     {
       DISPATCH_RECURSIVE_SWITCH_TABLE_APPLY_BODY()
     }
 
     template<typename ...Args>
-    constexpr decltype(auto) operator()(std::size_t i, Args&&... args)
+    constexpr auto operator()(std::size_t i, Args&&... args)
     DISPATCH_NOEXCEPT_FUNCTION_BODY(apply<0>(i, std::forward<Args>(args)...))
 
     template<typename ...Args>
-    constexpr decltype(auto) operator()(std::size_t i, Args&&... args) const
+    constexpr auto operator()(std::size_t i, Args&&... args) const
     DISPATCH_NOEXCEPT_FUNCTION_BODY(apply<0>(i, std::forward<Args>(args)...))
 
   };
@@ -79,7 +79,7 @@ namespace dispatch {
 
   template<std::size_t N, typename F, typename ErrorType>
   constexpr decltype(auto) make_sequential_table(F&& f, ErrorType&& error_value)
-  DISPATCH_NOEXCEPT_FUNCTION_BODY(SequentialTable<F, N>{
+  DISPATCH_NOEXCEPT_FUNCTION_BODY(SequentialTable<F, N, ErrorType>{
       std::forward<F>(f), std::forward<ErrorType>(error_value)});
 
 #undef DISPATCH_RECURSIVE_SWITCH_TABLE_RETURNS

@@ -14,9 +14,9 @@ dispatch_add_executable(map src/map.cpp)
 
 dispatch_add_executable(callback_table_test test/callback_table.cpp)
 # dispatch_add_executable(map test/map.cpp)
-dispatch_add_executable(naive_string_hash_test test/naive_string_hash.cpp)
+dispatch_add_executable(linear_hash_test test/linear_hash.cpp)
 dispatch_add_executable(sequential_table_test test/sequential_table.cpp)
-dispatch_add_executable(string_hash_test test/string_hash.cpp)
+dispatch_add_executable(chd_test test/chd.cpp)
 dispatch_add_executable(switch_table_test test/switch_table.cpp)
 
 

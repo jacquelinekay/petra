@@ -60,7 +60,8 @@ static constexpr bool equal(
 
 template<typename T, T... P>
 static constexpr bool equal(const string_literal<T, P...>&, const char* b) {
-  if (utilities::length(b) != sizeof...(P)) {
+  // if (utilities::length(b) != sizeof...(P)) {
+  if (strnlen(b, sizeof...(P)) != sizeof...(P)) {
     return false;
   } else {
     return compare_helper<T, P...>::apply(b, std::make_index_sequence<sizeof...(P)>{});

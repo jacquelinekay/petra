@@ -1,5 +1,6 @@
 #pragma once
 #include <experimental/type_traits>
+#include <tuple>
 
 namespace dispatch {
 
@@ -13,31 +14,37 @@ namespace dispatch {
   static constexpr bool Comparable() {
     return is_detected<comparable_t, T, S>{};
   }
-  /*
 
   // TupleAccess
+  // TODO: generalize to non-std-tuples, customization point
   template<typename T>
-  using TupleAccess = is_detected<
-        decltype(std::get<std::declval<std::size_t>()>(std::declval<T>())), T
-      >;
+  using tuple_access_t = decltype(std::get<std::declval<std::size_t>()>(std::declval<T>()));
 
-  // PairAccess
-  // TODO: Make sure that these compose
   template<typename T>
-  using PairAccess = is_detected<
-      std::void_t<
-          decltype(T.first),
-          decltype(T.second),
-          TupleAccess<T>::type>,
-      T>;
-      */
+  static constexpr bool TupleAccess() {
+    return is_detected<tuple_access_t, std::decay_t<T>>{};
+  }
+  template<typename T>
+  using pair_access_t = std::void_t<decltype(std::declval<T>().first), decltype(std::declval<T>().second)>;
+
+  template<typename T>
+  static constexpr bool PairAccess() {
+    return is_detected<pair_access_t, std::decay_t<T>>{};
+  }
 
   // Constant
   // A Constant is a type that wraps a runtime value with an accessor "data()"
   // It must also be EqualityComparable to the underlying type.
+  template<typename T>
+  using data_accessor_t = decltype(T::data());
 
+  template<typename T>
+  static constexpr bool Constant() {
+    return std::conjunction<
+      is_detected<data_accessor_t, T>,
+      std::bool_constant<Comparable<T, decltype(T::data())>()>>{};
+  }
 
-  // Invokable (?)
-
+  // TODO: Invokable
 
 }  // namespace dispatch

@@ -46,25 +46,26 @@ namespace dispatch {
     static_assert(no_collisions());
   };
 
-  // TODO: Factories for all kinds o' strings
-
-
-  template<template<typename...> typename Hash, typename... Args>
+  template<template<typename...> typename Hash, typename... Args,
+      typename = std::enable_if_t<(Constant<Args>() && ...)>>
   static constexpr auto make_chd() {
     return CHDHash<Hash, Args...>{};
   }
 
-  template<typename... Args>
+  template<typename... Args,
+      typename = std::enable_if_t<(Constant<Args>() && ...)>>
   static constexpr auto make_chd() {
     return CHDHash<SwitchTable, Args...>{};
   }
 
-  template<template<typename...> typename Hash, typename A, typename... Args>
+  template<template<typename...> typename Hash, typename A, typename... Args,
+      typename = std::enable_if_t<Constant<A>() && (Constant<Args>() && ...)>>
   static constexpr auto make_chd(A&&, Args&&...) {
     return CHDHash<Hash, std::decay_t<A>, std::decay_t<Args>...>{};
   }
 
-  template<typename A, typename... Args>
+  template<typename A, typename... Args,
+      typename = std::enable_if_t<Constant<A>() && (Constant<Args>() && ...)>>
   static constexpr auto make_chd(A&&, Args&&...) {
     return CHDHash<SwitchTable, std::decay_t<A>, std::decay_t<Args>...>{};
   }

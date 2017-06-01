@@ -39,7 +39,8 @@ namespace dispatch {
     }
   };
 
-  template<typename ...Inputs>
+  template<typename ...Inputs,
+      typename = std::enable_if_t<(Constant<Inputs>() && ...)>>
   constexpr decltype(auto) make_linear_hash(Inputs&&...) {
     return LinearHash<Inputs...>{};
   }

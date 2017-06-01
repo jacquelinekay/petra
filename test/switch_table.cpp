@@ -29,7 +29,19 @@ void run_test(std::index_sequence<I...>, S&& table) {
 }
 
 int main() {
-  run_test<TestSet>(dispatch::make_switch_table(test{}, TestSet{}));
+  {
+    run_test<TestSet>(dispatch::make_switch_table(test{}, TestSet{}));
+  }
+
+  {
+    constexpr auto test_with_error = [](auto&& i) {
+      return std::decay_t<decltype(i)>::value;
+    };
+    auto table = dispatch::make_switch_table(test_with_error, TestSet{}, TestSet::size());
+    // run_test(table);
+    // Try with an integer not in the set
+    DISPATCH_ASSERT(table(33) == TestSet::size());
+  }
   return 0;
 }
 

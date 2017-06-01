@@ -30,21 +30,32 @@ int main() {
     "foo",
     "oof"
   }};
+  std::array<std::size_t, set_size> results = {{0}};
 
-  auto make_callback_pairs = [&test_strings](auto&&... args) {
-    auto f = [&test_strings](auto&& result, const auto& key) {
+  auto make_callback_pairs = [&test_strings, &results](auto&&... args) {
+    auto f = [&test_strings, &results](auto&& result, const auto& key) {
       return append(result, std::make_pair(
           key,
-          [&key, &test_strings](auto&& i){
+          [&key, &test_strings, &results](auto&& i){
             DISPATCH_ASSERT(key == test_strings[i]);
+            ++results[i];
           }));
     };
     return fold_left(f, std::make_tuple(), args...);
   };
 
-  auto table = dispatch::make_callback_table(std::apply(make_callback_pairs, keys));
+  bool errored = false;
+
+  auto table = dispatch::make_callback_table(
+      std::apply(make_callback_pairs, keys),
+      [&errored](auto&&...) {
+        errored = true;
+      });
+
   for (std::size_t i = 0; i < set_size; ++i) {
     table.trigger(test_strings[i], i);
+    DISPATCH_ASSERT(results[i] == 1);
   }
+
   return 0;
 }

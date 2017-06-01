@@ -27,7 +27,20 @@ void run_test(S&& table) {
 }
 
 int main() {
-  run_test(dispatch::make_sequential_table<Size>(test{}));
+  {
+    run_test(dispatch::make_sequential_table<Size>(test{}));
+  }
+
+  {
+    constexpr auto test_with_error = [](auto&& i) {
+      return std::decay_t<decltype(i)>::value;
+    };
+    auto table = dispatch::make_sequential_table<Size>(test_with_error, Size);
+    // run_test(table);
+    // Try with an integer not in the set
+    DISPATCH_ASSERT(table(20) == Size);
+  }
+
   return 0;
 }
 
