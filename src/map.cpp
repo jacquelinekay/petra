@@ -6,6 +6,14 @@
 
 using namespace dispatch::literals;
 
+template<typename T>
+using printable_t = decltype(std::cout << std::declval<T>());
+
+template<typename T>
+static constexpr bool Printable() {
+  return dispatch::is_detected<printable_t, T>{};
+}
+
 int main() {
   auto example_map = dispatch::make_map(
     std::make_tuple(
@@ -29,5 +37,18 @@ int main() {
   std::cout << "bar: " << *example_map.at<std::string>("bar") << "\n";
   example_map.insert("abc", 0.2);
   std::cout << "abc: " << *example_map.at<double>("abc") << "\n";
+
+  constexpr std::size_t map_size = decltype(example_map)::size;
+
+  for (std::size_t i = 0; i < map_size; ++i) {
+    example_map.visit(
+        example_map.key_at(i),
+        [](const auto& x){
+          if constexpr (Printable<decltype(x)>()) {
+            std::cout << x << std::endl;
+          }
+        });
+  }
+
   return 0;
 }

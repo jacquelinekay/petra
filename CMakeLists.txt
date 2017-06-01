@@ -13,7 +13,7 @@ dispatch_add_executable(callback_table src/callback_table.cpp)
 dispatch_add_executable(map src/map.cpp)
 
 dispatch_add_executable(callback_table_test test/callback_table.cpp)
-# dispatch_add_executable(map test/map.cpp)
+dispatch_add_executable(map_test test/map.cpp)
 dispatch_add_executable(linear_hash_test test/linear_hash.cpp)
 dispatch_add_executable(sequential_table_test test/sequential_table.cpp)
 dispatch_add_executable(chd_test test/chd.cpp)

@@ -98,7 +98,7 @@ namespace dispatch {
     auto result = split_pairs(std::forward<std::pair<Keys, Fs>>(pairs)...);
     using K = decltype(result.first);
     using F = decltype(result.second);
-    return CallbackTable<SwitchTable, F, K>(std::forward<F>(result.second));
+    return CallbackTable<SwitchTable, F, K>(std::move(result.second));
   }
 
 }  // namespace dispatch

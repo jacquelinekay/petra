@@ -1,5 +1,6 @@
 #pragma once
 #include <experimental/type_traits>
+#include <iostream>
 #include <tuple>
 
 namespace dispatch {
@@ -33,8 +34,6 @@ namespace dispatch {
   }
 
   // Constant
-  // A Constant is a type that wraps a runtime value with an accessor "data()"
-  // It must also be EqualityComparable to the underlying type.
   template<typename T>
   using data_accessor_t = decltype(T::data());
 
@@ -44,7 +43,5 @@ namespace dispatch {
       is_detected<data_accessor_t, T>,
       std::bool_constant<Comparable<T, decltype(T::data())>()>>{};
   }
-
-  // TODO: Invokable
 
 }  // namespace dispatch

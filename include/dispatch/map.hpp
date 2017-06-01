@@ -1,8 +1,11 @@
 #pragma once
 
 #include "dispatch/chd.hpp"
-#include "dispatch/detail/index_map.hpp"
 #include "dispatch/sequential_table.hpp"
+#include "dispatch/detail/index_map.hpp"
+#include "dispatch/utilities/tuple.hpp"
+
+#include <type_traits>
 
 namespace dispatch {
   /* A heterogenous map with frozen keys known at compile time.
@@ -16,10 +19,7 @@ namespace dispatch {
            typename Values, typename ...Keys>
   struct Map {
     Map(Values&& v) : values(v) { }
-    // TODO: May need to make this a unique list
-    // using ValueVariant = std::variant<Values...>;
 
-    // TODO Error propagation if key is not in map; use expected?
     template<typename Value, typename Key>
     constexpr Value const* at(Key&& k) const {
       Value const* v;
@@ -34,13 +34,24 @@ namespace dispatch {
       return set_value_hash(key_hash(k), values, std::forward<Value>(v));
     }
 
+    template<typename Key, typename Visitor>
+    constexpr decltype(auto) visit(
+        Key&& k,
+        Visitor&& visitor) {
+      return visitor_hash(
+          key_hash(k),
+          values,
+          std::forward<Visitor>(visitor),
+          [](){
+            throw std::runtime_error("Got invalid index in dispatch::map::visit");
+          });
+    }
+
     template<typename Key, typename Visitor, typename E>
     constexpr decltype(auto) visit(
         Key&& k,
         Visitor&& visitor,
-        E&& error_callback = [](){
-          throw std::runtime_error("Got invalid index in dispatch::map::visit");
-        }) {
+        E&& error_callback) {
       return visitor_hash(
           key_hash(k),
           values,
@@ -48,10 +59,26 @@ namespace dispatch {
           std::forward<E>(error_callback));
     }
 
-  private:
+    // template<typename K>
+    constexpr decltype(auto) key_at(std::size_t i) const {
+      return make_sequential_table<size>(
+        [](auto&& i, auto&& k) {
+          constexpr std::size_t I = std::decay_t<decltype(i)>::value;
+          if constexpr (I >= size) {
+            return "";
+          } else {
+            return std::get<I>(k).data();
+          }
+        }
+      )(i, keys);
+    }
+
     static constexpr std::size_t size = sizeof...(Keys);
+
+  private:
     static constexpr auto key_hash = make_chd<Hash, Keys...>();
 
+    std::tuple<Keys...> keys;
     Values values;
 
     using index_map_t = std::array<std::size_t, size>;
@@ -105,20 +132,21 @@ namespace dispatch {
   };
 
 
-  template<template<typename...> typename Hash, typename... Keys, typename Values>
-  constexpr decltype(auto) make_map(std::tuple<Keys...>&&, Values&& values) {
-    return Map<Hash, Values, Keys...>{values};
+  template<template<typename...> typename Hash, typename... Keys, typename... Values>
+  constexpr decltype(auto) make_map(std::tuple<Keys...>&&, std::tuple<Values...>&& values) {
+    return Map<Hash, std::tuple<Values...>, Keys...>{values};
   }
 
-  template<typename... Keys, typename Values>
-  constexpr decltype(auto) make_map(std::tuple<Keys...>&&, Values&& values) {
-    return Map<SwitchTable, Values, Keys...>(std::forward<Values>(values));
+  template<typename... Keys, typename... Values>
+  constexpr decltype(auto) make_map(std::tuple<Keys...>&&, std::tuple<Values...>&& values) {
+    using ValueTuple = std::tuple<Values...>;
+    return Map<SwitchTable, ValueTuple, Keys...>(std::forward<ValueTuple>(values));
   }
 
-  template<typename... Pairs>
-  constexpr decltype(auto) make_map(Pairs&&... pairs) {
-    auto result = split_pairs(pairs...);
-    return make_map(result.first, result.second);
+  template<typename... Keys, typename... Values>
+  constexpr decltype(auto) make_map(std::pair<Keys, Values>&&... pairs) {
+    auto result = split_pairs(std::forward<std::pair<Keys, Values>>(pairs)...);
+    return make_map(std::move(result.first), std::move(result.second));
   }
 
 }  // namespace dispatch
