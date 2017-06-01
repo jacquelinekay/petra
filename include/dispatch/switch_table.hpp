@@ -22,7 +22,11 @@ namespace dispatch {
             IndexSeq{}), next>(i, std::forward<Args>(args)...); \
     } \
   } else if constexpr (!std::is_same<Result, void>{}) { \
-    return error_value; \
+    if constexpr (!std::is_same<ErrorType, void*>{}) { \
+      return error_value; \
+    } else { \
+      return static_cast<Result>(error_value); \
+    } \
   } \
 
 #define DISPATCH_NOEXCEPT_FUNCTION_BODY(...) \

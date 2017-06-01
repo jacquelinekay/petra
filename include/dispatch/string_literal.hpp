@@ -6,9 +6,10 @@
 #include <cstring>
 
 
-#include "utilities/fold.hpp"
-#include "utilities/sequence.hpp"
-#include "utilities/tuple.hpp"
+#include "dispatch/detail/string_literal.hpp"
+#include "dispatch/utilities/fold.hpp"
+#include "dispatch/utilities/sequence.hpp"
+#include "dispatch/utilities/tuple.hpp"
 
 namespace dispatch {
 
@@ -31,18 +32,6 @@ template<typename Test>
 struct is_string_literal<Test> : std::false_type {};
 
 template<typename T, T... P>
-struct compare_helper {
-  template<size_t... I>
-  static constexpr bool apply(const char* v, std::index_sequence<I...>) {
-    return ((P == v[I]) && ...);
-  }
-  template<typename S, S... Q>
-  static constexpr bool apply() {
-    return ((P == Q) && ...);
-  }
-};
-
-template<typename T, T... P>
 static constexpr bool empty(const string_literal<T, P...>&) {
   return sizeof...(P) == 0;
 }
@@ -53,18 +42,18 @@ static constexpr bool equal(
   if (sizeof...(P) != sizeof...(Q)) {
     return false;
   } else {
-    return compare_helper<T, P...>::template apply<S, Q...>(
+    return detail::compare<T, P...>::template apply<S, Q...>(
         std::make_index_sequence<sizeof...(P)>{});
   }
 }
 
 template<typename T, T... P>
 static constexpr bool equal(const string_literal<T, P...>&, const char* b) {
-  // if (utilities::length(b) != sizeof...(P)) {
-  if (strnlen(b, sizeof...(P)) != sizeof...(P)) {
+  if (utilities::length(b) != sizeof...(P)) {
     return false;
   } else {
-    return compare_helper<T, P...>::apply(b, std::make_index_sequence<sizeof...(P)>{});
+    return detail::compare<T, P...>::apply(
+        b, std::make_index_sequence<sizeof...(P)>{});
   }
 }
 
@@ -79,13 +68,23 @@ constexpr bool operator==(
   return equal(a, b);
 }
 
-// TODO
-// #ifdef DISPATCH_USE_UDL
+#define DISPATCH_STRING_LITERAL(Value) \
+  []() { \
+    struct tmp { \
+      static constexpr decltype(auto) data() { return Value; } \
+      static constexpr auto char_at(unsigned i) { return data()[i]; }; \
+    }; \
+    return dispatch::detail::from_string_literal( \
+        tmp{}, std::make_index_sequence<sizeof(Value)>{}); \
+  }() \
+
+#ifdef DISPATCH_USE_UDL
 namespace literals {
   template<typename T, T ...Pack>
   constexpr auto operator"" _s() {
     return string_literal<T, Pack...>{};
   }
 }  // namespace literals
-// #endif
+#endif
+
 }  // namespace dispatch

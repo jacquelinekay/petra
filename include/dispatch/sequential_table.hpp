@@ -8,7 +8,6 @@ namespace dispatch {
   callable(std::integral_constant<std::size_t, I>{}, \
            std::forward<Args>(args)...)
 
-// TODO: error handling anti-pattern
 #define DISPATCH_RECURSIVE_SWITCH_TABLE_APPLY_BODY() \
   using Result = std::result_of_t<F( \
     std::integral_constant<std::size_t, I>, Args...)>; \
@@ -19,8 +18,12 @@ namespace dispatch {
       default: \
         return apply<I + 1>(i, std::forward<Args>(args)...); \
     } \
-  }  else if constexpr (!std::is_same<Result, void>{}) { \
-    return error_value; \
+  } else if constexpr (!std::is_same<Result, void>{}) { \
+    if constexpr (!std::is_same<ErrorType, void*>{}) { \
+      return error_value; \
+    } else { \
+      return static_cast<Result>(error_value); \
+    } \
   } \
 
 
@@ -64,11 +67,11 @@ namespace dispatch {
     }
 
     template<typename ...Args>
-    constexpr auto operator()(std::size_t i, Args&&... args)
+    constexpr auto operator()(std::size_t i, Args&&... args) const
     DISPATCH_NOEXCEPT_FUNCTION_BODY(apply<0>(i, std::forward<Args>(args)...))
 
     template<typename ...Args>
-    constexpr auto operator()(std::size_t i, Args&&... args) const
+    constexpr auto operator()(std::size_t i, Args&&... args)
     DISPATCH_NOEXCEPT_FUNCTION_BODY(apply<0>(i, std::forward<Args>(args)...))
 
   };

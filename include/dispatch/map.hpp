@@ -21,24 +21,34 @@ namespace dispatch {
 
     // TODO Error propagation if key is not in map; use expected?
     template<typename Value, typename Key>
-    constexpr const Value* at(Key&& k) const {
-      const Value* v;
-      set_pointer(std::forward<Key>(k), values, v);
+    constexpr Value const* at(Key&& k) const {
+      Value const* v;
+      set_pointer_hash(key_hash(k), values, v);
       return v;
     }
 
-    // TODO: Error handling
+    // returns a read-only pointer to the location where v was inserted,
+    // or nullptr if lookup failed
     template<typename Key, typename Value>
-    void insert(Key&& k, Value&& v) {
-      set_value_hash(key_hash(k), values, std::forward<Value>(v));
+    constexpr const Value* insert(Key&& k, Value&& v) {
+      return set_value_hash(key_hash(k), values, std::forward<Value>(v));
+    }
+
+    template<typename Key, typename Visitor, typename E>
+    constexpr decltype(auto) visit(
+        Key&& k,
+        Visitor&& visitor,
+        E&& error_callback = [](){
+          throw std::runtime_error("Got invalid index in dispatch::map::visit");
+        }) {
+      return visitor_hash(
+          key_hash(k),
+          values,
+          std::forward<Visitor>(visitor),
+          std::forward<E>(error_callback));
     }
 
   private:
-    template<typename Key, typename Value>
-    static constexpr void set_pointer(Key&& k, const Values& vs, Value*& vptr) {
-      return set_pointer_hash(key_hash(k), vs, vptr);
-    }
-
     static constexpr std::size_t size = sizeof...(Keys);
     static constexpr auto key_hash = make_chd<Hash, Keys...>();
 
@@ -48,38 +58,50 @@ namespace dispatch {
     static constexpr index_map_t index_map =
         detail::init_index_map<index_map_t, key_hash(Keys{})...>(index_map_t{});
 
-    static constexpr auto set_pointer_l = [](auto&& index, const auto& vs, auto& ptr) {
-      constexpr std::size_t I = std::decay_t<decltype(index)>::value;
-      if constexpr (I >= size) {
-        ptr = nullptr;
-        return;
-      } else {
-        constexpr std::size_t Index = index_map[I];
-        if constexpr (std::is_same<std::tuple_element_t<Index, std::decay_t<decltype(vs)>>,
-                                   std::decay_t<decltype(*ptr)>>{}) {
-          ptr = &std::get<Index>(vs);
-        } else {
-          ptr = nullptr;
-        }
-      }
-    };
+    static constexpr auto set_pointer_hash = make_sequential_table<size>(
+        [](auto&& index, const auto& vs, auto*& ptr) {
+          constexpr std::size_t I = std::decay_t<decltype(index)>::value;
+          if constexpr (I >= size) {
+            ptr = nullptr;
+            return;
+          } else {
+            constexpr std::size_t Index = index_map[I];
+            if constexpr (std::is_same<
+                std::tuple_element_t<Index, std::decay_t<decltype(vs)>>,
+                std::decay_t<decltype(*ptr)>>{}) {
+              ptr = &std::get<Index>(vs);
+            } else {
+              ptr = nullptr;
+            }
+          }
+        });
 
-    // TODO: error handling
-    static constexpr auto set_value = [](auto&& index, auto& vs, const auto&& v) {
-      constexpr std::size_t I = std::decay_t<decltype(index)>::value;
-      if constexpr (I >= size) {
-        return;
-      } else {
-        constexpr std::size_t Index = index_map[I];
-        if constexpr (std::is_same<std::tuple_element_t<Index, std::decay_t<decltype(vs)>>,
-                                   std::decay_t<decltype(v)>>{}) {
-          std::get<Index>(vs) = v;
-        }
-      }
-    };
+    static constexpr auto set_value_hash = make_sequential_table<size>(
+        [](auto&& index, auto& vs, const auto&& v) -> std::add_pointer_t<decltype(v)> {
+          constexpr std::size_t I = std::decay_t<decltype(index)>::value;
+          if constexpr (I >= size) {
+            return nullptr;
+          } else {
+            constexpr std::size_t Index = index_map[I];
+            if constexpr (std::is_same<std::tuple_element_t<Index, std::decay_t<decltype(vs)>>,
+                                       std::decay_t<decltype(v)>>{}) {
+              std::get<Index>(vs) = v;
+              return &std::get<Index>(vs);
+            } else {
+              return nullptr;
+            }
+          }
+        });
 
-    static constexpr auto set_pointer_hash = make_sequential_table<size>(set_pointer_l);
-    static constexpr auto set_value_hash = make_sequential_table<size>(set_value);
+    static constexpr auto visitor_hash = make_sequential_table<size>(
+        [](auto&& index, auto& vs, auto&& visitor, auto&& error_callback) {
+          constexpr std::size_t I = std::decay_t<decltype(index)>::value;
+          if constexpr (I >= size) {
+            return error_callback();
+          } else {
+            return visitor(std::get<index_map[I]>(vs));
+          }
+        });
   };
 
 
