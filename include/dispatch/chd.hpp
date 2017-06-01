@@ -13,14 +13,14 @@ namespace dispatch {
     template<typename RuntimeType>
     static constexpr auto hash(const RuntimeType& input) {
       if constexpr (!use_fallback) {
-        // TODO: len(G) != set_size, so this differs from the Python impl
-        std::size_t key = detail::distinct_hash(0, input, set_size);
+        using adl::chd;
+        std::size_t key = chd(0, input, set_size, adl::chd_tag{});
         const auto [status, d] = second_hash(key);
         switch(status) {
           case detail::hash_status::Unique:
             return d;
           case detail::hash_status::Collision:
-            return detail::distinct_hash(d, input, set_size);  // TODO: len(V)?
+            return chd(d, input, set_size, adl::chd_tag{});
           case detail::hash_status::Empty:
           default:
             return set_size;

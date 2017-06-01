@@ -1,5 +1,7 @@
 #pragma once
 
+#include "dispatch/concepts.hpp"
+
 #include <tuple>
 #include <utility>
 

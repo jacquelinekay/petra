@@ -11,49 +11,58 @@
 #include "dispatch/utilities/tuple.hpp"
 
 namespace dispatch {
+// Customization point for user-provided hashable types
+
+static constexpr inline std::size_t chd_offset = 0x01000193;
+
+namespace adl {
+
+  struct chd_tag { };
+
+  static constexpr std::size_t chd(
+      std::size_t d, std::size_t value, std::size_t size, chd_tag&&) {
+    if (d == 0) {
+      d = chd_offset;
+    }
+    return (((d * chd_offset) ^ value) & 0xffffffff) % size;
+  }
+
+  static constexpr std::size_t chd(
+      std::size_t d, const char* s, std::size_t size, chd_tag&&) {
+    if (*s == 0) {
+      return d % size;
+    }
+    if (d == 0) {
+      d = chd_offset;
+    }
+    d = ((d * chd_offset) ^ (static_cast<std::size_t>(*s))) & 0xffffffff;
+    return chd(d, s + 1, size, chd_tag{});
+  }
+
+  template<typename T, T ...Pack>
+  static constexpr std::size_t chd(
+      std::size_t d, const string_literal<T, Pack...>&, std::size_t size, chd_tag&&) {
+    return chd(d, string_literal<T, Pack...>::data(), size, chd_tag{});
+  }
+}  // namespace adl
+
 namespace detail {
 
   enum struct hash_status : char {
     Empty,
     Unique,
     Collision
+
   };
-
-  static constexpr inline std::size_t distinct_offset = 0x01000193;
   static constexpr inline std::size_t overflow_boundary =
-      std::numeric_limits<std::size_t>::max() / 0x01000193;
-
-  static constexpr std::size_t distinct_hash(
-      std::size_t d, std::size_t value, std::size_t size) {
-    if (d == 0) {
-      d = distinct_offset;
-    }
-    return (((d * distinct_offset) ^ value) & 0xffffffff) % size;
-  }
-
-  static constexpr std::size_t distinct_hash(
-      std::size_t d, const char* s, std::size_t size) {
-    if (*s == 0) {
-      return d % size;
-    }
-    if (d == 0) {
-      d = distinct_offset;
-    }
-    d = ((d * distinct_offset) ^ (static_cast<std::size_t>(*s))) & 0xffffffff;
-    return distinct_hash(d, s + 1, size);
-  }
-
-  template<typename String>
-  static constexpr std::size_t distinct_hash(
-      std::size_t d, String&&, std::size_t size) {
-    return distinct_hash(d, std::decay_t<String>::data(), size);
-  }
+      std::numeric_limits<std::size_t>::max() / chd_offset;
 
   template<typename ...Inputs>
   static constexpr auto initialize_dictionary() noexcept {
+    using adl::chd;
     constexpr std::size_t set_size = sizeof...(Inputs);
     constexpr auto unique_seq = remove_repeats(
-        std::index_sequence<distinct_hash(0, Inputs{}, set_size)...>{});
+        std::index_sequence<chd(0, Inputs{}, set_size, adl::chd_tag{})...>{});
 
     constexpr std::size_t n_uniques = decltype(unique_seq)::size();
     static_assert(n_uniques > 0);
@@ -69,8 +78,7 @@ namespace detail {
     static_assert(tuple_size(initial_tuple) == n_uniques);
 
     constexpr auto accumulate_sets = [unique_seq](auto&& dict, auto&& str) {
-      constexpr auto value = std::decay_t<decltype(str)>::data();
-      constexpr auto hashed_value = distinct_hash(0, value, set_size);
+      constexpr auto hashed_value = chd(0, std::decay_t<decltype(str)>{}, set_size, adl::chd_tag{});
       constexpr std::size_t index = map_to_index<hashed_value>(unique_seq);
       return insert_at<index>(dict, append(std::get<index>(dict), str));
     };
@@ -96,8 +104,9 @@ namespace detail {
           std::make_pair(hash_status::Unique, Total),
           std::index_sequence<>{});
     } else {
+      using adl::chd;
       constexpr auto seq = std::index_sequence<
-            distinct_hash(D, SubInputs{}, Total)...>{};
+            chd(D, SubInputs{}, Total, adl::chd_tag{})...>{};
 
       if constexpr (unique(seq) && disjoint(seq, std::decay_t<decltype(values)>{})) {
         // Make sure to return the new values
