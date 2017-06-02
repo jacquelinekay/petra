@@ -14,34 +14,15 @@ static constexpr size_t set_size = 10;
 using namespace petra::literals;
 
 int main() {
-
   std::array<int, set_size> results = {{0}};
 
-  std::array<const char*, set_size > test_strings = {{
-    "asdf",
-    "qwerty",
-    "quux",
-    "int",
-    "arguments",
-    "foobar",
-    "abcd",
-    "badc",
-    "foo",
-    "oof"
-  }};
+  std::array<const char*, set_size> test_strings = {
+      {"asdf", "qwerty", "quux", "int", "arguments", "foobar", "abcd", "badc",
+       "foo", "oof"}};
 
-  auto string_hash = petra::make_chd(
-    "asdf"_s,
-    "qwerty"_s,
-    "quux"_s,
-    "int"_s,
-    "arguments"_s,
-    "foobar"_s,
-    "abcd"_s,
-    "badc"_s,
-    "foo"_s,
-    "oof"_s
-  );
+  auto string_hash =
+      petra::make_chd("asdf"_s, "qwerty"_s, "quux"_s, "int"_s, "arguments"_s,
+                      "foobar"_s, "abcd"_s, "badc"_s, "foo"_s, "oof"_s);
 
   for (const auto& s : test_strings) {
     std::size_t N = string_hash(s);

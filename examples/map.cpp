@@ -20,21 +20,9 @@ static constexpr bool Printable() {
 
 int main() {
   auto example_map = petra::make_map(
-    std::make_tuple(
-      "abc"_s,
-      "foo"_s,
-      "bar"_s,
-      "qwerty"_s,
-      "asdf"_s
-    ),
-    std::make_tuple(
-      0.1,
-      1,
-      std::string("bar"),
-      std::vector<int>{1, 2, 3},
-      std::make_tuple("hello", "world")
-    )
-  );
+      std::make_tuple("abc"_s, "foo"_s, "bar"_s, "qwerty"_s, "asdf"_s),
+      std::make_tuple(0.1, 1, std::string("bar"), std::vector<int>{1, 2, 3},
+                      std::make_tuple("hello", "world")));
 
   std::cout << "abc: " << *example_map.at<double>("abc").value() << "\n";
   std::cout << "foo: " << *example_map.at<int>("foo").value() << "\n";
@@ -45,18 +33,13 @@ int main() {
   constexpr std::size_t map_size = decltype(example_map)::size;
 
   for (std::size_t i = 0; i < map_size; ++i) {
-    example_map.key_at(i).then(
-        [&example_map](auto&& k) {
-          example_map.visit(
-            k,
-            [](const auto& x){
-              if constexpr (Printable<decltype(x)>()) {
-                std::cout << x << std::endl;
-              }
-            }
-          );
+    example_map.key_at(i).then([&example_map](auto&& k) {
+      example_map.visit(k, [](const auto& x) {
+        if constexpr (Printable<decltype(x)>()) {
+          std::cout << x << std::endl;
         }
-    );
+      });
+    });
   }
 
   return 0;

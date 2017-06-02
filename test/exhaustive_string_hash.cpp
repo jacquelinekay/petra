@@ -14,9 +14,7 @@
 
 template<std::size_t Length>
 bool string_mutate(std::string& s, std::size_t index = 0) {
-  if (index == Length) {
-    return false;
-  }
+  if (index == Length) { return false; }
   if ((++s[index] % 126) == 0x0) {
     s[index] = 32;
     return string_mutate<Length>(s, ++index);
@@ -38,26 +36,27 @@ auto prepare_keyword_hashes(const std::array<const char*, I>& keywords) {
 */
 
 template<typename Table, typename TestStrings, std::size_t... Length>
-void hash_all_strings(Table&& table, const TestStrings& test_strings, std::index_sequence<Length...>&&) {
+void hash_all_strings(Table&& table, const TestStrings& test_strings,
+                      std::index_sequence<Length...>&&) {
   constexpr auto N = petra::test_utils::set_size;
   // auto keyword_hashes = prepare_keyword_hashes<N>(test_strings);
 
-  ([&table, &test_strings]() {
-    std::string test(Length, 32); // TODO: initialization
-    do {
-      bool skip = false;
-      for (std::size_t j = 0; j < N; ++j) {
-        const auto key = test_strings[j];
-        if (key == test.c_str()) {
-          // don't try to hash this string
-          skip = true;
-        }
-      }
-      if (!skip) {
-        table(test.c_str());
-      }
-    } while (string_mutate<Length>(test));
-  }(), ...);
+  (
+      [&table, &test_strings]() {
+        std::string test(Length, 32);  // TODO: initialization
+        do {
+          bool skip = false;
+          for (std::size_t j = 0; j < N; ++j) {
+            const auto key = test_strings[j];
+            if (key == test.c_str()) {
+              // don't try to hash this string
+              skip = true;
+            }
+          }
+          if (!skip) { table(test.c_str()); }
+        } while (string_mutate<Length>(test));
+      }(),
+      ...);
 }
 
 int main() {
@@ -70,7 +69,8 @@ int main() {
 
   constexpr auto max_length = max_string_length_tuple(string_constants);
 
-  hash_all_strings(string_petra_table, test_strings, std::make_index_sequence<max_length>{});
+  hash_all_strings(string_petra_table, test_strings,
+                   std::make_index_sequence<max_length>{});
 
   /*
   for (const auto result : results) {

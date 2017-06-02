@@ -18,11 +18,8 @@ struct printer {
 };
 
 int main() {
-  constexpr auto x = petra::make_chd("hello"_s,
-      "goodbye"_s,
-      "dog"_s,
-      "fish"_s,
-      "cat"_s);
+  constexpr auto x =
+      petra::make_chd("hello"_s, "goodbye"_s, "dog"_s, "fish"_s, "cat"_s);
   using Hash = decltype(x);
 
   std::cout << "hash(hello) => " << Hash::hash("hello") << "\n";

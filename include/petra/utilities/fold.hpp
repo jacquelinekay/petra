@@ -20,18 +20,18 @@ namespace petra {
     }
   };
 
-  template <typename F, typename... Xs>
+  template<typename F, typename... Xs>
   constexpr auto fold_left(const F& f, Xs&&... xs) {
     auto result = (... >>= fold_wrapper<F, Xs>{f, xs});
     return result.state;
   }
 
-  template <typename F, typename Init, std::size_t... I>
+  template<typename F, typename Init, std::size_t... I>
   constexpr auto fold_left(const F& f, Init&& init, std::index_sequence<I...>) {
     // auto result = (... >>= fold_wrapper<F, Xs>{f, xs});
-    auto result = (fold_wrapper<F, Init>{f, init} >>= ...
-        >>= fold_wrapper<F, std::integral_constant<std::size_t, I>>{
-            f, std::integral_constant<std::size_t, I>{}});
+    auto result = (fold_wrapper<F, Init>{f, init} >>= ... >>=
+                   fold_wrapper<F, std::integral_constant<std::size_t, I>>{
+                       f, std::integral_constant<std::size_t, I>{}});
     return result.state;
   }
 

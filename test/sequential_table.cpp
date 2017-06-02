@@ -22,18 +22,13 @@ struct test {
   std::array<std::size_t, Size> results = {{0}};
 };
 
-
 template<typename S>
 void run_test(S&& table) {
-  for (std::size_t i = 0; i < Size; ++i) {
-    table(i);
-  }
+  for (std::size_t i = 0; i < Size; ++i) { table(i); }
 }
 
 int main() {
-  {
-    run_test(petra::make_sequential_table<Size>(test{}));
-  }
+  { run_test(petra::make_sequential_table<Size>(test{})); }
 
   {
     constexpr auto test_with_error = [](auto&& i) {
@@ -47,4 +42,3 @@ int main() {
 
   return 0;
 }
-

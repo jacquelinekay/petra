@@ -4,30 +4,31 @@
 
 #pragma once
 
+#include "petra/chd.hpp"
 #include "petra/concepts.hpp"
 #include "petra/detail/index_map.hpp"
-#include "petra/chd.hpp"
 #include "petra/sequential_table.hpp"
-
 
 namespace petra {
   /* A callback table with heterogeneous keys known at compile time.
    * The return type of the callbacks must be uniform.
    * */
-  template<template<typename...> typename Hash, typename Callbacks, typename Keys, typename ErrorCallback = void*>
+  template<template<typename...> typename Hash, typename Callbacks,
+           typename Keys, typename ErrorCallback = void*>
   struct CallbackTable;
 
-  template<template<typename...> typename Hash, typename Callbacks, typename ...Keys, typename ErrorCallback>
+  template<template<typename...> typename Hash, typename Callbacks,
+           typename... Keys, typename ErrorCallback>
   struct CallbackTable<Hash, Callbacks, std::tuple<Keys...>, ErrorCallback> {
-
-    constexpr CallbackTable(Callbacks&& c) : callbacks(c) { }
+    constexpr CallbackTable(Callbacks&& c) : callbacks(c) {}
 
     constexpr CallbackTable(Callbacks&& c, ErrorCallback&& e)
-      : callbacks(c), error_callback(e) { }
+        : callbacks(c), error_callback(e) {}
 
-    template<typename Key, typename ...Args>
+    template<typename Key, typename... Args>
     constexpr decltype(auto) trigger(const Key& key, Args&&... args) {
-      return v_hash(key_hash(key), callbacks, error_callback, std::forward<Args>(args)...);
+      return v_hash(key_hash(key), callbacks, error_callback,
+                    std::forward<Args>(args)...);
     }
 
   private:
@@ -43,7 +44,8 @@ namespace petra {
 
     static_assert(size == std::tuple_size<Callbacks>{});
 
-    static constexpr auto callback_map = [](auto&& index, auto&& c, auto&& e, auto&&... args) {
+    static constexpr auto callback_map = [](auto&& index, auto&& c, auto&& e,
+                                            auto&&... args) {
       constexpr std::size_t I = std::decay_t<decltype(index)>::value;
       if constexpr (I < size) {
         static_assert(index_map[I] < std::tuple_size<Callbacks>{});
@@ -56,24 +58,25 @@ namespace petra {
     static constexpr auto v_hash = make_sequential_table<size>(callback_map);
   };
 
-  template<typename ...Keys, typename ...Fs>
-  constexpr decltype(auto) make_callback_table(
-      std::tuple<Keys...>&&, std::tuple<Fs...>&& callbacks) {
+  template<typename... Keys, typename... Fs>
+  constexpr decltype(auto) make_callback_table(std::tuple<Keys...>&&,
+                                               std::tuple<Fs...>&& callbacks) {
     using FTuple = std::tuple<Fs...>;
     return CallbackTable<SwitchTable, FTuple, std::tuple<Keys...>>(
         std::forward<FTuple>(callbacks));
   }
 
-  template<typename ...Keys, typename ...Fs, typename E,
+  template<typename... Keys, typename... Fs, typename E,
            typename = std::enable_if_t<!TupleAccess<E>()>>
-  constexpr decltype(auto) make_callback_table(
-      std::tuple<Keys...>&&, std::tuple<Fs...>&& callbacks, E&& e) {
+  constexpr decltype(auto) make_callback_table(std::tuple<Keys...>&&,
+                                               std::tuple<Fs...>&& callbacks,
+                                               E&& e) {
     using FTuple = std::tuple<Fs...>;
     return CallbackTable<SwitchTable, FTuple, std::tuple<Keys...>, E>(
         std::forward<FTuple>(callbacks), std::forward<E>(e));
   }
 
-  template<typename ...Pairs,
+  template<typename... Pairs,
            typename = std::enable_if_t<(PairAccess<Pairs>() && ...)>>
   constexpr decltype(auto) make_callback_table(std::tuple<Pairs...>&& pairs) {
     constexpr auto f = [](Pairs&&... args) {
@@ -82,22 +85,22 @@ namespace petra {
     return std::apply(f, std::forward<std::tuple<Pairs...>>(pairs));
   }
 
-  template<typename E, typename ...Pairs,
-    typename = std::enable_if_t<(PairAccess<Pairs>() && ...)
-                              && !PairAccess<E>()>>
-  constexpr decltype(auto) make_callback_table(
-        std::tuple<Pairs...>&& pairs, E&& e) {
+  template<typename E, typename... Pairs,
+           typename = std::enable_if_t<(PairAccess<Pairs>() && ...)
+                                       && !PairAccess<E>()>>
+  constexpr decltype(auto) make_callback_table(std::tuple<Pairs...>&& pairs,
+                                               E&& e) {
     auto f = [&e](Pairs&&... args) {
       auto result = split_pairs(std::forward<Pairs>(args)...);
       using K = decltype(result.first);
       using F = decltype(result.second);
-      return CallbackTable<SwitchTable, F, K, E>(
-          std::forward<F>(result.second), std::forward<E>(e));
+      return CallbackTable<SwitchTable, F, K, E>(std::forward<F>(result.second),
+                                                 std::forward<E>(e));
     };
     return std::apply(f, std::forward<std::tuple<Pairs...>>(pairs));
   }
 
-  template<typename ...Keys, typename ...Fs>
+  template<typename... Keys, typename... Fs>
   constexpr decltype(auto) make_callback_table(std::pair<Keys, Fs>&&... pairs) {
     auto result = split_pairs(std::forward<std::pair<Keys, Fs>>(pairs)...);
     using K = decltype(result.first);

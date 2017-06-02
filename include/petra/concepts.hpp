@@ -9,11 +9,12 @@
 
 namespace petra {
 
-  template<template<typename ...> typename Op, typename... Args>
+  template<template<typename...> typename Op, typename... Args>
   using is_detected = std::experimental::is_detected<Op, Args...>;
 
   template<typename T, typename S>
-  using comparable_t = decltype(std::declval<std::decay_t<T>>() == std::declval<std::decay_t<S>>());
+  using comparable_t = decltype(std::declval<std::decay_t<T>>()
+                                == std::declval<std::decay_t<S>>());
 
   template<typename T, typename S>
   static constexpr bool Comparable() {
@@ -23,14 +24,16 @@ namespace petra {
   // TupleAccess
   // TODO: generalize to non-std-tuples, customization point
   template<typename T>
-  using tuple_access_t = decltype(std::get<std::declval<std::size_t>()>(std::declval<T>()));
+  using tuple_access_t =
+      decltype(std::get<std::declval<std::size_t>()>(std::declval<T>()));
 
   template<typename T>
   static constexpr bool TupleAccess() {
     return is_detected<tuple_access_t, std::decay_t<T>>{};
   }
   template<typename T>
-  using pair_access_t = std::void_t<decltype(std::declval<T>().first), decltype(std::declval<T>().second)>;
+  using pair_access_t = std::void_t<decltype(std::declval<T>().first),
+                                    decltype(std::declval<T>().second)>;
 
   template<typename T>
   static constexpr bool PairAccess() {
@@ -44,8 +47,8 @@ namespace petra {
   template<typename T>
   static constexpr bool Constant() {
     return std::conjunction<
-      is_detected<data_accessor_t, T>,
-      std::bool_constant<Comparable<T, decltype(T::data())>()>>{};
+        is_detected<data_accessor_t, T>,
+        std::bool_constant<Comparable<T, decltype(T::data())>()>>{};
   }
 
 }  // namespace petra

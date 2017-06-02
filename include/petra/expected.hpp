@@ -13,14 +13,13 @@ namespace petra {
   // requires Error to be default constructible
   template<typename T, typename Error>
   struct Expected {
+    constexpr Expected(T&& value) : value_(value), is_valid(true) {}
 
-    constexpr Expected(T&& value) : value_(value), is_valid(true) { }
+    constexpr Expected(Error&& error) : error_(error), is_valid(false) {}
 
-    constexpr Expected(Error&& error) : error_(error), is_valid(false) { }
+    constexpr Expected(const T& value) : value_(value), is_valid(true) {}
 
-    constexpr Expected(const T& value) : value_(value), is_valid(true) { }
-
-    constexpr Expected(const Error& error) : error_(error), is_valid(false) { }
+    constexpr Expected(const Error& error) : error_(error), is_valid(false) {}
 
     constexpr bool valid() const noexcept { return is_valid; }
 
@@ -86,11 +85,11 @@ namespace petra {
 
   template<typename Error>
   struct Expected<void, Error> {
-    constexpr Expected() : is_valid(true) { }
+    constexpr Expected() : is_valid(true) {}
 
-    constexpr Expected(Error&& error) : error_(error), is_valid(false) { }
+    constexpr Expected(Error&& error) : error_(error), is_valid(false) {}
 
-    constexpr Expected(const Error& error) : error_(error), is_valid(false) { }
+    constexpr Expected(const Error& error) : error_(error), is_valid(false) {}
 
     constexpr bool valid() const noexcept { return is_valid; }
 
@@ -123,17 +122,18 @@ namespace petra {
         return Expected<void, Error>(error_);
       }
     }
+
   private:
     Error error_;
     bool is_valid;
   };
 
-  template<typename T, typename E, typename ...Args>
+  template<typename T, typename E, typename... Args>
   static decltype(auto) emplace_expected_value(Args&&... args) {
     return Expected<T, E>(T(std::forward<Args>(args)...));
   }
 
-  template<typename T, typename E, typename ...Args>
+  template<typename T, typename E, typename... Args>
   static decltype(auto) emplace_expected_error(Args&&... args) {
     return Expected<T, E>(E(std::forward<Args>(args)...));
   }

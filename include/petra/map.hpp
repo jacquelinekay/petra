@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include "petra/expected.hpp"
 #include "petra/chd.hpp"
-#include "petra/sequential_table.hpp"
 #include "petra/detail/index_map.hpp"
+#include "petra/expected.hpp"
+#include "petra/sequential_table.hpp"
 #include "petra/utilities/tuple.hpp"
 
 #include <type_traits>
@@ -20,25 +20,27 @@ namespace petra {
    * The interface is variant-like--considering naming this "VariantMap".
    * */
 
-  enum MapAccessStatus {
-    key_type_mismatch,
-    invalid_key,
-    success
-  };
+  enum MapAccessStatus { key_type_mismatch, invalid_key, success };
 
-  template<template<typename...> typename Hash,
-           typename Values, typename ...Keys>
+  template<template<typename...> typename Hash, typename Values,
+           typename... Keys>
   struct Map {
-    Map(Values&& v) : values(v) { }
+    Map(Values&& v) : values(v) {}
 
     template<typename Value, typename Key>
-    constexpr Expected<std::reference_wrapper<const Value>, MapAccessStatus> at(Key&& k) const {
-      return set_pointer_hash(key_hash(k), values, utilities::type_tag<std::reference_wrapper<const Value>>{});
+    constexpr Expected<std::reference_wrapper<const Value>, MapAccessStatus>
+    at(Key&& k) const {
+      return set_pointer_hash(
+          key_hash(k), values,
+          utilities::type_tag<std::reference_wrapper<const Value>>{});
     }
 
     template<typename Value, typename Key>
-    constexpr Expected<std::reference_wrapper<Value>, MapAccessStatus> at(Key&& k) {
-      return set_pointer_hash(key_hash(k), values, utilities::type_tag<std::reference_wrapper<Value>>{});
+    constexpr Expected<std::reference_wrapper<Value>, MapAccessStatus>
+    at(Key&& k) {
+      return set_pointer_hash(
+          key_hash(k), values,
+          utilities::type_tag<std::reference_wrapper<Value>>{});
     }
 
     // returns a read-only pointer to the location where v was inserted,
@@ -49,25 +51,24 @@ namespace petra {
     }
 
     template<typename Key, typename Visitor>
-    constexpr decltype(auto) visit(
-        Key&& k,
-        Visitor&& visitor) {
+    constexpr decltype(auto) visit(Key&& k, Visitor&& visitor) {
       return visitor_hash(key_hash(k), values, std::forward<Visitor>(visitor));
     }
 
     // template<typename K>
-    constexpr Expected<const char*, MapAccessStatus> key_at(std::size_t i) const {
+    constexpr Expected<const char*, MapAccessStatus>
+    key_at(std::size_t i) const {
       using E = Expected<const char*, MapAccessStatus>;
       return make_sequential_table<size>(
-        [](auto&& i, auto&& k) {
-          constexpr std::size_t I = std::decay_t<decltype(i)>::value;
-          if constexpr (I >= size) {
-            return E(MapAccessStatus::key_type_mismatch);
-          } else {
-            return E(std::get<I>(k).data());
-          }
-        }
-      , MapAccessStatus::invalid_key)(i, keys);
+          [](auto&& i, auto&& k) {
+            constexpr std::size_t I = std::decay_t<decltype(i)>::value;
+            if constexpr (I >= size) {
+              return E(MapAccessStatus::key_type_mismatch);
+            } else {
+              return E(std::get<I>(k).data());
+            }
+          },
+          MapAccessStatus::invalid_key)(i, keys);
     }
 
     static constexpr std::size_t size = sizeof...(Keys);
@@ -92,13 +93,15 @@ namespace petra {
             return E(MapAccessStatus::invalid_key);
           } else {
             constexpr std::size_t Index = index_map[I];
-            if constexpr (std::is_same<std::tuple_element_t<Index, Vs>, typename R::type>{}) {
+            if constexpr (std::is_same<std::tuple_element_t<Index, Vs>,
+                                       typename R::type>{}) {
               return E(std::ref(std::get<Index>(vs)));
             } else {
               return E(MapAccessStatus::key_type_mismatch);
             }
           }
-        }, MapAccessStatus::invalid_key);
+        },
+        MapAccessStatus::invalid_key);
 
     static constexpr auto set_value_hash = make_sequential_table<size>(
         [](auto&& index, auto& vs, const auto&& v) {
@@ -107,25 +110,29 @@ namespace petra {
             return MapAccessStatus::invalid_key;
           } else {
             constexpr std::size_t Index = index_map[I];
-            if constexpr (std::is_same<std::tuple_element_t<Index, std::decay_t<decltype(vs)>>,
-                                       std::decay_t<decltype(v)>>{}) {
+            if constexpr (
+                std::is_same<
+                    std::tuple_element_t<Index, std::decay_t<decltype(vs)>>,
+                    std::decay_t<decltype(v)>>{}) {
               std::get<Index>(vs) = v;
               return MapAccessStatus::success;
             } else {
               return MapAccessStatus::key_type_mismatch;
             }
           }
-        }, MapAccessStatus::invalid_key);
+        },
+        MapAccessStatus::invalid_key);
 
     static constexpr auto visitor_hash = make_sequential_table<size>(
         [](auto&& index, auto& vs, auto&& visitor) {
           constexpr std::size_t I = std::decay_t<decltype(index)>::value;
           if constexpr (I >= size) {
-            return Expected<void, MapAccessStatus>(MapAccessStatus::invalid_key);
+            return Expected<void, MapAccessStatus>(
+                MapAccessStatus::invalid_key);
           } else {
-            using R = std::result_of_t<
-                decltype(visitor)(
-                std::tuple_element_t<index_map[I], std::decay_t<decltype(vs)>>)>;
+            using R = std::result_of_t<decltype(visitor)(
+                std::tuple_element_t<index_map[I],
+                                     std::decay_t<decltype(vs)>>)>;
             using E = Expected<R, MapAccessStatus>;
             if constexpr (!std::is_same<void, R>{}) {
               return E(visitor(std::get<index_map[I]>(vs)));
@@ -134,19 +141,23 @@ namespace petra {
               return E();
             }
           }
-        }, MapAccessStatus::invalid_key);
+        },
+        MapAccessStatus::invalid_key);
   };
 
-
-  template<template<typename...> typename Hash, typename... Keys, typename... Values>
-  constexpr decltype(auto) make_map(std::tuple<Keys...>&&, std::tuple<Values...>&& values) {
+  template<template<typename...> typename Hash, typename... Keys,
+           typename... Values>
+  constexpr decltype(auto) make_map(std::tuple<Keys...>&&,
+                                    std::tuple<Values...>&& values) {
     return Map<Hash, std::tuple<Values...>, Keys...>{values};
   }
 
   template<typename... Keys, typename... Values>
-  constexpr decltype(auto) make_map(std::tuple<Keys...>&&, std::tuple<Values...>&& values) {
+  constexpr decltype(auto) make_map(std::tuple<Keys...>&&,
+                                    std::tuple<Values...>&& values) {
     using ValueTuple = std::tuple<Values...>;
-    return Map<SwitchTable, ValueTuple, Keys...>(std::forward<ValueTuple>(values));
+    return Map<SwitchTable, ValueTuple, Keys...>(
+        std::forward<ValueTuple>(values));
   }
 
   template<typename... Keys, typename... Values>

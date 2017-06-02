@@ -9,7 +9,7 @@
 
 namespace petra {
 
-  template<template<typename...> typename IntermediateHash, typename ...Inputs>
+  template<template<typename...> typename IntermediateHash, typename... Inputs>
   struct CHDHash {
     static constexpr std::size_t set_size = sizeof...(Inputs);
     static constexpr bool use_fallback = set_size <= 4;
@@ -19,15 +19,13 @@ namespace petra {
       if constexpr (!use_fallback) {
         using adl::chd;
         std::size_t key = chd(0, input, set_size, adl::chd_tag{});
-        const auto [status, d] = second_hash(key);
-        switch(status) {
-          case detail::hash_status::Unique:
-            return d;
+        const auto[status, d] = second_hash(key);
+        switch (status) {
+          case detail::hash_status::Unique: return d;
           case detail::hash_status::Collision:
             return chd(d, input, set_size, adl::chd_tag{});
           case detail::hash_status::Empty:
-          default:
-            return set_size;
+          default: return set_size;
         }
       } else {
         return second_hash(input);
@@ -51,24 +49,26 @@ namespace petra {
   };
 
   template<template<typename...> typename Hash, typename... Args,
-      typename = std::enable_if_t<(Constant<Args>() && ...)>>
+           typename = std::enable_if_t<(Constant<Args>() && ...)>>
   static constexpr auto make_chd() {
     return CHDHash<Hash, Args...>{};
   }
 
   template<typename... Args,
-      typename = std::enable_if_t<(Constant<Args>() && ...)>>
+           typename = std::enable_if_t<(Constant<Args>() && ...)>>
   static constexpr auto make_chd() {
     return CHDHash<SwitchTable, Args...>{};
   }
 
-  template<template<typename...> typename Hash, typename A, typename... Args,
+  template<
+      template<typename...> typename Hash, typename A, typename... Args,
       typename = std::enable_if_t<Constant<A>() && (Constant<Args>() && ...)>>
   static constexpr auto make_chd(A&&, Args&&...) {
     return CHDHash<Hash, std::decay_t<A>, std::decay_t<Args>...>{};
   }
 
-  template<typename A, typename... Args,
+  template<
+      typename A, typename... Args,
       typename = std::enable_if_t<Constant<A>() && (Constant<Args>() && ...)>>
   static constexpr auto make_chd(A&&, Args&&...) {
     return CHDHash<SwitchTable, std::decay_t<A>, std::decay_t<Args>...>{};

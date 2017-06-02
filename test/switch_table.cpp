@@ -10,7 +10,8 @@
 #include <array>
 #include <iostream>
 
-using TestSet = std::index_sequence<400, 32, 1, 99999, 1337, 42, 123456789, 0, 2, 2048>;
+using TestSet =
+    std::index_sequence<400, 32, 1, 99999, 1337, 42, 123456789, 0, 2, 2048>;
 
 struct test {
   template<std::size_t N>
@@ -32,23 +33,21 @@ void run_test(S&& table) {
 
 template<typename S, size_t... I>
 void run_test(std::index_sequence<I...>, S&& table) {
-  (table(I),...);
+  (table(I), ...);
 }
 
 int main() {
-  {
-    run_test<TestSet>(petra::make_switch_table(test{}, TestSet{}));
-  }
+  { run_test<TestSet>(petra::make_switch_table(test{}, TestSet{})); }
 
   {
     constexpr auto test_with_error = [](auto&& i) {
       return std::decay_t<decltype(i)>::value;
     };
-    auto table = petra::make_switch_table(test_with_error, TestSet{}, TestSet::size());
+    auto table =
+        petra::make_switch_table(test_with_error, TestSet{}, TestSet::size());
     // run_test(table);
     // Try with an integer not in the set
     PETRA_ASSERT(table(33) == TestSet::size());
   }
   return 0;
 }
-
