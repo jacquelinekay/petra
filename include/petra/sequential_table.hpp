@@ -23,11 +23,7 @@ namespace petra {
         return apply<I + 1>(i, std::forward<Args>(args)...); \
     } \
   } else if constexpr (!std::is_same<Result, void>{}) { \
-    if constexpr (!std::is_same<ErrorType, void*>{}) { \
-      return error_value; \
-    } else { \
       return static_cast<Result>(error_value); \
-    } \
   } \
 
 
@@ -36,7 +32,7 @@ namespace petra {
     return __VA_ARGS__; \
   } \
 
-  // A specializaion of SwitchTable for a sequential set of integers
+  // A specialization of SwitchTable for a sequential set of integers
   template<typename F, std::size_t N, typename ErrorType = void*>
   struct SequentialTable {
     F callable;
@@ -56,6 +52,7 @@ namespace petra {
     constexpr SequentialTable(F&& f, ErrorType&& e) : callable(f), error_value(e) {
     }
 
+    // TODO: Clean up
     template<std::size_t I, typename ...Args>
     constexpr auto apply(std::size_t i, Args&&... args)
     noexcept(noexcept(PETRA_RECURSIVE_SWITCH_TABLE_RETURNS()))

@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "petra/expected.hpp"
 #include "petra/chd.hpp"
 #include "petra/sequential_table.hpp"
 #include "petra/detail/index_map.hpp"
@@ -19,22 +20,31 @@ namespace petra {
    * The interface is variant-like--considering naming this "VariantMap".
    * */
 
+  enum MapAccessStatus {
+    key_type_mismatch,
+    invalid_key,
+    success
+  };
+
   template<template<typename...> typename Hash,
            typename Values, typename ...Keys>
   struct Map {
     Map(Values&& v) : values(v) { }
 
     template<typename Value, typename Key>
-    constexpr Value const* at(Key&& k) const {
-      Value const* v;
-      set_pointer_hash(key_hash(k), values, v);
-      return v;
+    constexpr Expected<std::reference_wrapper<const Value>, MapAccessStatus> at(Key&& k) const {
+      return set_pointer_hash(key_hash(k), values, utilities::type_tag<std::reference_wrapper<const Value>>{});
+    }
+
+    template<typename Value, typename Key>
+    constexpr Expected<std::reference_wrapper<Value>, MapAccessStatus> at(Key&& k) {
+      return set_pointer_hash(key_hash(k), values, utilities::type_tag<std::reference_wrapper<Value>>{});
     }
 
     // returns a read-only pointer to the location where v was inserted,
     // or nullptr if lookup failed
     template<typename Key, typename Value>
-    constexpr const Value* insert(Key&& k, Value&& v) {
+    constexpr MapAccessStatus insert(Key&& k, Value&& v) {
       return set_value_hash(key_hash(k), values, std::forward<Value>(v));
     }
 
@@ -42,39 +52,22 @@ namespace petra {
     constexpr decltype(auto) visit(
         Key&& k,
         Visitor&& visitor) {
-      return visitor_hash(
-          key_hash(k),
-          values,
-          std::forward<Visitor>(visitor),
-          [](){
-            throw std::runtime_error("Got invalid index in petra::map::visit");
-          });
-    }
-
-    template<typename Key, typename Visitor, typename E>
-    constexpr decltype(auto) visit(
-        Key&& k,
-        Visitor&& visitor,
-        E&& error_callback) {
-      return visitor_hash(
-          key_hash(k),
-          values,
-          std::forward<Visitor>(visitor),
-          std::forward<E>(error_callback));
+      return visitor_hash(key_hash(k), values, std::forward<Visitor>(visitor));
     }
 
     // template<typename K>
-    constexpr decltype(auto) key_at(std::size_t i) const {
+    constexpr Expected<const char*, MapAccessStatus> key_at(std::size_t i) const {
+      using E = Expected<const char*, MapAccessStatus>;
       return make_sequential_table<size>(
         [](auto&& i, auto&& k) {
           constexpr std::size_t I = std::decay_t<decltype(i)>::value;
           if constexpr (I >= size) {
-            return "";
+            return E(MapAccessStatus::key_type_mismatch);
           } else {
-            return std::get<I>(k).data();
+            return E(std::get<I>(k).data());
           }
         }
-      )(i, keys);
+      , MapAccessStatus::invalid_key)(i, keys);
     }
 
     static constexpr std::size_t size = sizeof...(Keys);
@@ -90,49 +83,58 @@ namespace petra {
         detail::init_index_map<index_map_t, key_hash(Keys{})...>(index_map_t{});
 
     static constexpr auto set_pointer_hash = make_sequential_table<size>(
-        [](auto&& index, const auto& vs, auto*& ptr) {
+        [](auto&& index, auto& vs, auto type_tag) {
+          using R = typename decltype(type_tag)::type;
+          using E = Expected<R, MapAccessStatus>;
+          using Vs = std::decay_t<decltype(vs)>;
           constexpr std::size_t I = std::decay_t<decltype(index)>::value;
           if constexpr (I >= size) {
-            ptr = nullptr;
-            return;
+            return E(MapAccessStatus::invalid_key);
           } else {
             constexpr std::size_t Index = index_map[I];
-            if constexpr (std::is_same<
-                std::tuple_element_t<Index, std::decay_t<decltype(vs)>>,
-                std::decay_t<decltype(*ptr)>>{}) {
-              ptr = &std::get<Index>(vs);
+            if constexpr (std::is_same<std::tuple_element_t<Index, Vs>, typename R::type>{}) {
+              return E(std::ref(std::get<Index>(vs)));
             } else {
-              ptr = nullptr;
+              return E(MapAccessStatus::key_type_mismatch);
             }
           }
-        });
+        }, MapAccessStatus::invalid_key);
 
     static constexpr auto set_value_hash = make_sequential_table<size>(
-        [](auto&& index, auto& vs, const auto&& v) -> std::add_pointer_t<decltype(v)> {
+        [](auto&& index, auto& vs, const auto&& v) {
           constexpr std::size_t I = std::decay_t<decltype(index)>::value;
           if constexpr (I >= size) {
-            return nullptr;
+            return MapAccessStatus::invalid_key;
           } else {
             constexpr std::size_t Index = index_map[I];
             if constexpr (std::is_same<std::tuple_element_t<Index, std::decay_t<decltype(vs)>>,
                                        std::decay_t<decltype(v)>>{}) {
               std::get<Index>(vs) = v;
-              return &std::get<Index>(vs);
+              return MapAccessStatus::success;
             } else {
-              return nullptr;
+              return MapAccessStatus::key_type_mismatch;
             }
           }
-        });
+        }, MapAccessStatus::invalid_key);
 
     static constexpr auto visitor_hash = make_sequential_table<size>(
-        [](auto&& index, auto& vs, auto&& visitor, auto&& error_callback) {
+        [](auto&& index, auto& vs, auto&& visitor) {
           constexpr std::size_t I = std::decay_t<decltype(index)>::value;
           if constexpr (I >= size) {
-            return error_callback();
+            return Expected<void, MapAccessStatus>(MapAccessStatus::invalid_key);
           } else {
-            return visitor(std::get<index_map[I]>(vs));
+            using R = std::result_of_t<
+                decltype(visitor)(
+                std::tuple_element_t<index_map[I], std::decay_t<decltype(vs)>>)>;
+            using E = Expected<R, MapAccessStatus>;
+            if constexpr (!std::is_same<void, R>{}) {
+              return E(visitor(std::get<index_map[I]>(vs)));
+            } else {
+              visitor(std::get<index_map[I]>(vs));
+              return E();
+            }
           }
-        });
+        }, MapAccessStatus::invalid_key);
   };
 
 

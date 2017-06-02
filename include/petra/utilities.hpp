@@ -11,6 +11,10 @@
 
 namespace petra {
 namespace utilities {
+  template<typename T>
+  struct type_tag {
+    using type = T;
+  };
 
   constexpr unsigned length(const char* str) {
     if (str == nullptr) {
@@ -50,6 +54,9 @@ namespace utilities {
 
   template<template<typename...> class Ref, typename... Args>
   struct is_specialization<Ref<Args...>, Ref>: std::true_type {};
+
+  template<typename T>
+  struct is_reference_wrapper : is_specialization<T, std::reference_wrapper> {};
 
   template<std::size_t... Sequence>
   constexpr auto as_tuple(std::index_sequence<Sequence...>) {
