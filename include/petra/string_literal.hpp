@@ -26,15 +26,6 @@ private:
   static constexpr char value[sizeof...(Pack) + 1] = {Pack..., '\0'};
 };
 
-template<typename Test, auto ...T>
-struct is_string_literal;
-
-template<typename T, T... Args>
-struct is_string_literal<string_literal<T, Args...>>: std::true_type {};
-
-template<typename Test>
-struct is_string_literal<Test> : std::false_type {};
-
 template<typename T, T... P>
 static constexpr bool empty(const string_literal<T, P...>&) {
   return sizeof...(P) == 0;
