@@ -1,3 +1,7 @@
+# Copyright Jacqueline Kay 2017
+# Distributed under the MIT License.
+# See accompanying LICENSE.md or https://opensource.org/licenses/MIT
+
 function(petra_add_executable executable_name filename)
     add_executable(${executable_name} ${filename})
     set_property(TARGET ${executable_name} PROPERTY CXX_STANDARD 17)

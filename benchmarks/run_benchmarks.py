@@ -1,3 +1,7 @@
+# Copyright Jacqueline Kay 2017
+# Distributed under the MIT License.
+# See accompanying LICENSE.md or https://opensource.org/licenses/MIT
+
 #!/usr/bin/env python3
 
 import argparse

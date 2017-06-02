@@ -1,3 +1,7 @@
+# Copyright Jacqueline Kay 2017
+# Distributed under the MIT License.
+# See accompanying LICENSE.md or https://opensource.org/licenses/MIT
+
 function(petra_add_benchmark benchmark_name N M T output_prefix)
     set(output "${output_prefix}_${N}_${T}.cpp")
     set(full_name "${benchmark_name}_${N}_${T}")

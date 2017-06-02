@@ -1,3 +1,7 @@
+# Copyright Jacqueline Kay 2017
+# Distributed under the MIT License.
+# See accompanying LICENSE.md or https://opensource.org/licenses/MIT
+
 include(petra_add_executable)
 
 add_custom_target(examples COMMENT "Build example programs.")

@@ -1,3 +1,7 @@
+// Copyright Jacqueline Kay 2017
+// Distributed under the MIT License.
+// See accompanying LICENSE.md or https://opensource.org/licenses/MIT
+
 #include "petra/simple_string_hash.hpp"
 #include "petra/naive_string_hash.hpp"
 #include "petra/string_petra.hpp"

@@ -1,3 +1,7 @@
+// Copyright Jacqueline Kay 2017
+// Distributed under the MIT License.
+// See accompanying LICENSE.md or https://opensource.org/licenses/MIT
+
 #include "petra/linear_hash.hpp"
 #include "petra/string_literal.hpp"
 
