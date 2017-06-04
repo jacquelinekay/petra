@@ -17,7 +17,9 @@ namespace petra {
     };
 
     constexpr unsigned length(const char* str) {
-      if (str == nullptr) { return 0; }
+      if (str == nullptr) {
+        return 0;
+      }
       return *str ? 1 + length(str + 1) : 0;
     }
 

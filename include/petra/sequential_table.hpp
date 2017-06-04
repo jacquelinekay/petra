@@ -21,6 +21,7 @@ namespace petra {
       default: return apply<I + 1>(i, std::forward<Args>(args)...);            \
     }                                                                          \
   } else if constexpr (!std::is_same<Result, void>{}) {                        \
+    (void)i;                                                                   \
     return static_cast<Result>(error_value);                                   \
   }
 
@@ -61,13 +62,18 @@ namespace petra {
     }
 
     template<typename... Args>
-    constexpr auto operator()(std::size_t i, Args&&... args) const
-        PETRA_NOEXCEPT_FUNCTION_BODY(apply<0>(i, std::forward<Args>(args)...))
+    constexpr auto operator()(std::size_t i, Args&&... args) const {
+      //     PETRA_NOEXCEPT_FUNCTION_BODY(apply<0>(i,
+      //     std::forward<Args>(args)...));
+      return this->apply<0>(i, std::forward<Args>(args)...);
+    }
 
-            template<typename... Args>
-            constexpr auto operator()(std::size_t i, Args&&... args)
-                PETRA_NOEXCEPT_FUNCTION_BODY(
-                    apply<0>(i, std::forward<Args>(args)...))
+    template<typename... Args>
+    constexpr auto operator()(std::size_t i, Args&&... args) {
+      //     PETRA_NOEXCEPT_FUNCTION_BODY(apply<0>(i,
+      //     std::forward<Args>(args)...));
+      return this->apply<0>(i, std::forward<Args>(args)...);
+    }
   };
 
   template<std::size_t N, typename F>

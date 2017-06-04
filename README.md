@@ -1,5 +1,9 @@
 # petra
 
+C++17 metaprogramming library for transforming runtime values to compile-time values and types.
+
+[![Build Status](https://travis-ci.org/jacquelinekay/petra.svg?branch=master)](https://travis-ci.org/jacquelinekay/petra)
+
 Petra is a header-only C++ library that provides building blocks for efficiently mapping from runtime to compile-time values.
 
 Currently (June 1st, 2017) Petra is in pre-alpha.

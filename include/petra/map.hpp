@@ -4,13 +4,14 @@
 
 #pragma once
 
+#include <functional>
+#include <type_traits>
+
 #include "petra/chd.hpp"
 #include "petra/detail/index_map.hpp"
 #include "petra/expected.hpp"
 #include "petra/sequential_table.hpp"
 #include "petra/utilities/tuple.hpp"
-
-#include <type_traits>
 
 namespace petra {
   /* A heterogenous map with frozen keys known at compile time.
@@ -65,7 +66,7 @@ namespace petra {
             if constexpr (I >= size) {
               return E(MapAccessStatus::key_type_mismatch);
             } else {
-              return E(std::get<I>(k).data());
+              return E(std::get<I>(k).value());
             }
           },
           MapAccessStatus::invalid_key)(i, keys);

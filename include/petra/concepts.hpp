@@ -25,7 +25,9 @@ namespace petra {
   // TODO: generalize to non-std-tuples, customization point
   template<typename T>
   using tuple_access_t =
-      decltype(std::get<std::declval<std::size_t>()>(std::declval<T>()));
+      // decltype(std::get<std::declval<std::size_t>()>(std::declval<T>()));
+      // Workaround for libstdc++, declval can't be used here
+      decltype(std::get<0>(std::declval<T>()));
 
   template<typename T>
   static constexpr bool TupleAccess() {
@@ -42,13 +44,13 @@ namespace petra {
 
   // Constant
   template<typename T>
-  using data_accessor_t = decltype(T::data());
+  using data_accessor_t = decltype(T::value());
 
   template<typename T>
   static constexpr bool Constant() {
     return std::conjunction<
         is_detected<data_accessor_t, T>,
-        std::bool_constant<Comparable<T, decltype(T::data())>()>>{};
+        std::bool_constant<Comparable<T, decltype(T::value())>()>>{};
   }
 
 }  // namespace petra
