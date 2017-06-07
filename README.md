@@ -4,13 +4,45 @@ C++17 metaprogramming library for transforming runtime values to compile-time va
 
 [![Build Status](https://travis-ci.org/jacquelinekay/petra.svg?branch=master)](https://travis-ci.org/jacquelinekay/petra)
 
-Petra is a header-only C++ library that provides building blocks for efficiently mapping from runtime to compile-time values.
+[![experimental](http://badges.github.io/stability-badges/dist/experimental.svg)](http://github.com/badges/stability-badges)
 
-Currently (June 1st, 2017) Petra is in pre-alpha.
+## Motivation
+
+From template metaprogramming to the `constexpr` keyword, C++ offers powerful and expressive tools for writing code which is guaranteed to execute at compile time and therefore can be optimized out at runtime. A "compile-time value" (a non-type template parameter or the result of a core constant expression) can be arbitrarily used in a program anywhere a "runtime-determined value" (e.g. a value read from `stdin` or from a file) can. The rules of the language prevent us from arbitrarily declaring a value assigned from a non-constant expression as `constexpr`:
+
+```
+int main(int argc, char** argv) {
+  int x = atoi(argv[1]);
+  assert(x < 10);
+  constexpr int y = x;  // Compiler error
+
+  std::array<int, y> buckets;
+}
+```
+
+But what if the programmer wants to use a runtime-determined value in a constexpr context?
+
+TODO:
+```
+int main(int argc, char** argv) {
+  int x = atoi(argv[1]);
+  constexpr auto unwrap = petra::make_sequential_table<10>([](auto&& x){ return x(); });
+  constexpr int y = unwrap(i);
+  std::array<int, y> buckets;
+}
+```
+
+### Integers
+
+### Strings
+
+### Aggregate literal types
+
+### Building more complex data structures
 
 ## Build and Install
 
-Petra is tested with Clang trunk, libc++ trunk, and C++17. CMake will compile with c++1z but it does not check that you are using Clang or libc++. GCC is untested, but this is on the roadmap. MSCVC is untested and not on the roadmap. C++14 support is also on the roadmap.
+Petra is tested with Clang trunk and C++17. You will also need a bleeding edge standard library version for `std::apply`, `std::is_detected`, etc. `libc++` 5 and `libstdc++` 6 both work. CMake currently does not check this, so if you're having problems compiling, make sure your environment variables are set properly.
 
 ```
 git clone git@github.com:jacquelinekay/petra.git
@@ -18,7 +50,7 @@ cd petra
 mkdir build
 cd build
 
-cmake .. <optionally specify -DCMAKE_CXX_FLAGS="-stdlib=libc++", -DCMAKE_CXX_COMPILER=clang++< etc.>
+cmake .. <optionally specify -DCMAKE_CXX_FLAGS="-stdlib=libc++", -DCMAKE_CXX_COMPILER=clang++, etc.>
 cmake --build .
 ```
 
