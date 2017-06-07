@@ -15,7 +15,7 @@ namespace petra {
     static constexpr bool use_fallback = set_size <= 4;
 
     template<typename RuntimeType>
-    static constexpr auto hash(const RuntimeType& input) {
+    static constexpr std::size_t hash(const RuntimeType& input) {
       if constexpr (!use_fallback) {
         using adl::chd;
         std::size_t key = chd(0, input, set_size, adl::chd_tag{});

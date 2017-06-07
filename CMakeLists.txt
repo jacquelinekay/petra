@@ -2,7 +2,7 @@
 # Distributed under the MIT License.
 # See accompanying LICENSE.md or https://opensource.org/licenses/MIT
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.2)
 project(petra)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 

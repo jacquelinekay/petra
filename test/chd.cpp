@@ -2,12 +2,12 @@
 // Distributed under the MIT License.
 // See accompanying LICENSE.md or https://opensource.org/licenses/MIT
 
+#include <iostream>
+
 #include "petra/chd.hpp"
 #include "petra/string_literal.hpp"
 
 #include "utilities.hpp"
-
-#include <iostream>
 
 static constexpr size_t set_size = 10;
 

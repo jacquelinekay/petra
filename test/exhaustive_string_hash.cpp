@@ -14,7 +14,9 @@
 
 template<std::size_t Length>
 bool string_mutate(std::string& s, std::size_t index = 0) {
-  if (index == Length) { return false; }
+  if (index == Length) {
+    return false;
+  }
   if ((++s[index] % 126) == 0x0) {
     s[index] = 32;
     return string_mutate<Length>(s, ++index);
@@ -53,7 +55,9 @@ void hash_all_strings(Table&& table, const TestStrings& test_strings,
               skip = true;
             }
           }
-          if (!skip) { table(test.c_str()); }
+          if (!skip) {
+            table(test.c_str());
+          }
         } while (string_mutate<Length>(test));
       }(),
       ...);
