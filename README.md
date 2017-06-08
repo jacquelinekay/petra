@@ -38,25 +38,36 @@ auto fill_array() {
 int main(int argc, char** argv) {
   int x = atoi(argv[1]);
   constexpr auto get_result = petra::make_sequential_table<10>([](auto&& x){
-    return fill_array<x()>(); 
+    return fill_array<x()>();
   );
   auto result = get_result(i);
 }
 ```
 
-If you're an experienced library writer, you may have already identified the technique used to implement this example: a compile-time jump table. This construct forms the basis of `variant` and `tuple`. But what if you want to transform more complicated data types, like strings?
+If you're an experienced library writer, you may have already identified the technique used to implement this example: a compile-time jump table. This construct forms the basis of `variant` and `tuple`.
 
-Petra supports mapping strings from runtime `const char*`'s to a compile-time string representation when the set of strings is known at compile time, by way of a string hash with constant runtime complexity: 
+Petra provides runtime-to-compile-time jump tables for all primitive integral types, and for sets of enums. But what if you want to transform more complicated data types, like strings?
+
+Petra supports mapping strings from runtime `const char*`'s to a compile-time string representation when the set of strings is known at compile time, by way of a string hash with constant runtime complexity.
+
+This example simply prints a string read in from the command line. However, notice how that the string is accessed as a static member of a type-level string:
 
 ```
 int main(int argc, char** argv) {
-  const char* token = argv[1];
+  const char* input = argv[1];
+
+  auto callback = [](auto&& token) {
+    std::cout << "hash value: " << std::decay_t<decltype(token)>::value()
+              << "\n";
+  };
+
+  auto map_to_type = petra::make_string_map("dog"_s, "fish"_s, "cat"_s);
+
+  map_to_type(input);
 }
 ```
 
-### Integers
-
-### Strings
+### Error handling
 
 ### Aggregate literal types
 

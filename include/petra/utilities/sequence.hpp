@@ -10,64 +10,67 @@
 
 namespace petra {
 
-  template<std::size_t I, size_t... Sequence, size_t... Indices>
-  static constexpr std::size_t
-  access_sequence_helper(const std::index_sequence<Sequence...>&,
-                         const std::index_sequence<Indices...>&) {
+  template<auto I, typename T, T... Sequence, decltype(I)... Indices>
+  static constexpr decltype(I)
+  access_sequence_helper(const std::integer_sequence<T, Sequence...>&,
+                         const std::integer_sequence<decltype(I), Indices...>&) {
     return ((Indices == I ? Sequence : 0) + ...);
   }
 
   // utility to access the Ith element of an index sequence
-  template<std::size_t I, size_t... Sequence>
-  static constexpr std::size_t
-  access_sequence(const std::index_sequence<Sequence...>& seq) {
-    return access_sequence_helper<I>(
-        seq, std::make_index_sequence<sizeof...(Sequence)>{});
+  template<auto I, typename T, T... Sequence>
+  static constexpr T
+  access_sequence(const std::integer_sequence<T, Sequence...>& seq) {
+    return access_sequence_helper<I, T>(
+        seq, std::make_integer_sequence<decltype(I), sizeof...(Sequence)>{});
   }
 
   // Reverse operation: given an item in the sequence, return its index
-  template<std::size_t I, size_t... Sequence>
-  static constexpr std::size_t map_to_index() {
-    return access_sequence_helper<I>(
-        std::make_index_sequence<sizeof...(Sequence)>{},
-        std::index_sequence<Sequence...>{});
+  template<auto I, typename T, T... Sequence>
+  static constexpr decltype(I) map_to_index() {
+    using IndexT = decltype(I);
+    return access_sequence_helper<I, T>(
+        std::make_integer_sequence<IndexT, sizeof...(Sequence)>{},
+        std::integer_sequence<T, Sequence...>{});
   }
 
-  template<std::size_t I, size_t... Sequence>
+  template<auto I, decltype(I)... Sequence>
   static constexpr std::size_t
-  map_to_index(std::index_sequence<Sequence...>&&) {
-    return map_to_index<I, Sequence...>();
+  map_to_index(std::integer_sequence<decltype(I), Sequence...>&&) {
+    return map_to_index<I, decltype(I), Sequence...>();
   }
 
-  template<std::size_t I, typename... T, size_t... J>
+  template<auto I, typename... T, decltype(I)... J>
   static constexpr std::size_t
-  map_to_index_helper(std::tuple<T...>&& t, std::index_sequence<J...>&&) {
+  map_to_index_helper(std::tuple<T...>&& t, std::integer_sequence<decltype(I), J...>&&) {
     return ((I == std::get<J>(t) ? J : 0) + ...);
   }
 
-  template<std::size_t I, typename... T>
+  template<auto I, typename... T>
   static constexpr std::size_t map_to_index(std::tuple<T...>&& t) {
-    return map_to_index_helper<I>(t, std::make_index_sequence<sizeof...(T)>{});
+    return map_to_index_helper<I>(t, std::make_integer_sequence<decltype(I), sizeof...(T)>{});
   }
 
-  template<std::size_t I, size_t... J>
-  static constexpr auto append(std::index_sequence<J...>) {
-    return std::index_sequence<J..., I>{};
+  template<auto I, decltype(I)... J>
+  static constexpr auto append(std::integer_sequence<decltype(I), J...>) {
+    return std::integer_sequence<decltype(I), J..., I>{};
   }
 
-  static constexpr auto pop_front(const std::index_sequence<>&) {
-    return std::index_sequence<>{};
+  template<typename T>
+  static constexpr auto pop_front(const std::integer_sequence<T>&) {
+    return std::integer_sequence<T>{};
   }
 
-  template<std::size_t I, std::size_t... Is>
-  static constexpr auto pop_front(const std::index_sequence<I, Is...>&) {
-    return std::make_pair(I, std::index_sequence<Is...>{});
+  template<auto I, decltype(I)... Is>
+  static constexpr auto pop_front(const std::integer_sequence<decltype(I), I, Is...>&) {
+    return std::make_pair(I, std::integer_sequence<decltype(I), Is...>{});
   }
 
   template<typename Integral>
   static constexpr bool in_sequence(const Integral&) {
     return false;
   }
+
   // check if the first element is in the following sequence
   template<typename Integral, typename T, typename... Ts>
   static constexpr bool in_sequence(const Integral& i, const T& t,
@@ -80,68 +83,69 @@ namespace petra {
     return in_sequence(i, ts...);
   }
 
-  template<typename Integral, std::size_t... J>
+  template<typename Integral, Integral... J>
   static constexpr bool in_sequence(const Integral& I,
-                                    std::index_sequence<J...>) {
+                                    std::integer_sequence<Integral, J...>) {
     return in_sequence(I, J...);
   }
 
-  template<std::size_t... Result>
+  template<typename T, T... Result>
   static constexpr auto
-  make_unique_sequence(const std::index_sequence<Result...>& result,
-                       std::index_sequence<>) {
+  make_unique_sequence(const std::integer_sequence<T, Result...>& result,
+                       std::integer_sequence<T>) {
     return result;
   }
 
   // do we need to ensure that order is preserved?
-  template<std::size_t... Result, std::size_t X, std::size_t... Sequence>
+  template<typename T, T... Result, T X, T... Sequence>
   static constexpr auto
-  make_unique_sequence(const std::index_sequence<Result...>&,
-                       std::index_sequence<X, Sequence...>) {
+  make_unique_sequence(const std::integer_sequence<T, Result...>&,
+                       std::integer_sequence<T, X, Sequence...>) {
     if constexpr (in_sequence(X, Result...)) {
-      return make_unique_sequence(std::index_sequence<Result...>{},
-                                  std::index_sequence<Sequence...>{});
+      return make_unique_sequence(std::integer_sequence<T, Result...>{},
+                                  std::integer_sequence<T, Sequence...>{});
     } else {
-      return make_unique_sequence(std::index_sequence<Result..., X>{},
-                                  std::index_sequence<Sequence...>{});
+      return make_unique_sequence(std::integer_sequence<T, Result..., X>{},
+                                  std::integer_sequence<T, Sequence...>{});
     }
   }
 
-  template<std::size_t... Sequence>
+  template<typename T, T... Sequence>
   static constexpr auto
-  remove_repeats(const std::index_sequence<Sequence...>& s) {
-    return make_unique_sequence(std::index_sequence<>{}, s);
+  remove_repeats(const std::integer_sequence<T, Sequence...>& s) {
+    return make_unique_sequence(std::integer_sequence<T>{}, s);
   }
 
-  template<std::size_t... Sequence>
-  static constexpr bool unique(const std::index_sequence<Sequence...>& seq) {
+  template<typename T, T... Sequence>
+  static constexpr bool unique(const std::integer_sequence<T, Sequence...>& seq) {
     return seq.size() == remove_repeats(seq).size();
   }
 
-  static constexpr auto concatenate() { return std::index_sequence<>{}; }
+  template<typename T>
+  static constexpr auto concatenate() { return std::integer_sequence<T>{}; }
 
-  template<std::size_t... I>
-  constexpr auto concatenate(std::index_sequence<I...> i) {
+  template<typename T, T... I>
+  constexpr auto concatenate(std::integer_sequence<T, I...> i) {
     return i;
   }
 
-  template<std::size_t... I, size_t... J>
-  static constexpr auto concatenate(std::index_sequence<I...>,
-                                    std::index_sequence<J...>) {
-    return std::index_sequence<I..., J...>{};
+  template<typename T, T... I, T... J>
+  static constexpr auto concatenate(std::integer_sequence<T, I...>,
+                                    std::integer_sequence<T, J...>) {
+    return std::integer_sequence<T, I..., J...>{};
   }
 
-  template<std::size_t... I, size_t... J, typename... T>
-  static constexpr auto concatenate(std::index_sequence<I...>&& is,
-                                    std::index_sequence<J...>&& js, T&&... ts) {
+  template<typename T, T... I, T... J, typename... Ts>
+  static constexpr auto concatenate(std::integer_sequence<T, I...>&& is,
+                                    std::integer_sequence<T, J...>&& js, Ts&&... ts) {
     return concatenate(concatenate(is, js), ts...);
   }
 
   // precondition: J is a subset of I
   // Choose everything in I that is not in J
-  template<std::size_t... I, size_t... J>
-  static constexpr auto difference(std::index_sequence<I...>,
-                                   std::index_sequence<J...>) {
+  template<typename T, T... I, T... J>
+  static constexpr auto difference(std::integer_sequence<T, I...>,
+                                   std::integer_sequence<T, J...>) {
     constexpr auto f = [](auto&& seq, auto&& i) {
       constexpr size_t index = std::decay_t<decltype(i)>::value;
       if constexpr (in_sequence(index, J...)) {
@@ -150,13 +154,13 @@ namespace petra {
         return append<index>(seq);
       }
     };
-    return fold_left(f, std::index_sequence<>{},
-                     std::integral_constant<std::size_t, I>{}...);
+    return fold_left(f, std::integer_sequence<T>{},
+                     std::integral_constant<T, I>{}...);
   }
 
-  template<std::size_t... I, size_t... J>
-  static constexpr bool disjoint(std::index_sequence<I...>,
-                                 std::index_sequence<J...>) {
+  template<typename T, T... I, T... J>
+  static constexpr bool disjoint(std::integer_sequence<T, I...>,
+                                 std::integer_sequence<T, J...>) {
     return (!in_sequence(I, J...) && ...);
   }
 

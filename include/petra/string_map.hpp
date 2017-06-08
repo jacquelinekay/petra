@@ -43,7 +43,6 @@ namespace petra {
     static constexpr auto inputs = std::make_tuple(Inputs{}...);
     static constexpr auto chd = make_chd(Inputs{}...);
     static constexpr std::size_t size = sizeof...(Inputs);
-    ;
 
     using index_map_t = std::array<std::size_t, size>;
     static constexpr index_map_t index_map =
