@@ -10,12 +10,12 @@
 namespace petra {
 
 #define PETRA_RECURSIVE_SWITCH_TABLE_RETURNS()                                 \
-  callable(std::integral_constant<std::size_t, I>{},                           \
+  callable(std::integral_constant<Integral, I>{},                           \
            std::forward<Args>(args)...)
 
 #define PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY()                              \
   using Result =                                                               \
-      std::result_of_t<F(std::integral_constant<std::size_t, I>, Args...)>;    \
+      std::result_of_t<F(std::integral_constant<Integral, I>, Args...)>;    \
   if constexpr (Iterations < sizeof...(Sequence)) {                            \
     switch (i) {                                                               \
       case I: return PETRA_RECURSIVE_SWITCH_TABLE_RETURNS();                   \
@@ -39,8 +39,8 @@ namespace petra {
   template<typename F, typename IndexSeq, typename ErrorType = void*>
   struct SwitchTable;
 
-  template<typename F, std::size_t... Sequence, typename ErrorType>
-  struct SwitchTable<F, std::index_sequence<Sequence...>, ErrorType> {
+  template<typename F, typename Integral, Integral... Sequence, typename ErrorType>
+  struct SwitchTable<F, std::integer_sequence<Integral, Sequence...>, ErrorType> {
     static constexpr auto get_error_val = []() {
       if constexpr (std::is_same<ErrorType, void*>{}) {
         return nullptr;
@@ -57,21 +57,21 @@ namespace petra {
     F callable;
     const ErrorType error_value;
 
-    using IndexSeq = std::index_sequence<Sequence...>;
-    template<std::size_t I, std::size_t Iterations, typename... Args>
-    constexpr auto apply(std::size_t i, Args&&... args) noexcept(
+    using IndexSeq = std::integer_sequence<Integral, Sequence...>;
+    template<Integral I, std::size_t Iterations, typename... Args>
+    constexpr auto apply(Integral i, Args&&... args) noexcept(
         noexcept(PETRA_RECURSIVE_SWITCH_TABLE_RETURNS())) {
       PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY()
     }
 
-    template<std::size_t I, std::size_t Iterations, typename... Args>
-    constexpr auto apply(std::size_t i, Args&&... args) const
+    template<Integral I, std::size_t Iterations, typename... Args>
+    constexpr auto apply(Integral i, Args&&... args) const
         noexcept(noexcept(PETRA_RECURSIVE_SWITCH_TABLE_RETURNS())) {
       PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY()
     }
 
     template<typename... Args>
-    constexpr auto operator()(std::size_t i, Args&&... args) {
+    constexpr auto operator()(Integral i, Args&&... args) {
       // PETRA_NOEXCEPT_FUNCTION_BODY(this->apply<access_sequence<0>(IndexSeq{}),
       // 0>(
       //    i, std::forward<Args>(args)...));
@@ -80,7 +80,7 @@ namespace petra {
     }
 
     template<typename... Args>
-    constexpr auto operator()(std::size_t i, Args&&... args) const {
+    constexpr auto operator()(Integral i, Args&&... args) const {
       // PETRA_NOEXCEPT_FUNCTION_BODY(this->apply<access_sequence<0>(IndexSeq{}),
       // 0>(
       //      i, std::forward<Args>(args)...))
@@ -89,21 +89,21 @@ namespace petra {
     }
   };
 
-  template<std::size_t... Sequence, typename F>
+  template<typename Integral, Integral... Sequence, typename F>
   static constexpr decltype(auto) make_switch_table(F&& f)
       PETRA_NOEXCEPT_FUNCTION_BODY(
-          SwitchTable<F, std::index_sequence<Sequence...>>(std::forward<F>(f)));
+          SwitchTable<F, std::integer_sequence<Integral, Sequence...>>(std::forward<F>(f)));
 
-  template<typename F, std::size_t... I>
+  template<typename F, typename Integral, Integral... I>
   static constexpr decltype(auto) make_switch_table(F&& f,
-                                                    std::index_sequence<I...>&&)
+                                                    std::integer_sequence<Integral, I...>&&)
       PETRA_NOEXCEPT_FUNCTION_BODY(
-          SwitchTable<F, std::index_sequence<I...>>(std::forward<F>(f)));
+          SwitchTable<F, std::integer_sequence<Integral, I...>>(std::forward<F>(f)));
 
-  template<std::size_t... Sequence, typename F, typename E>
+  template<typename Integral, Integral... Sequence, typename F, typename E>
   static constexpr decltype(auto)
   make_switch_table(F&& f, E&& e) PETRA_NOEXCEPT_FUNCTION_BODY(
-      SwitchTable<F, std::index_sequence<Sequence...>, E>(std::forward<F>(f),
+      SwitchTable<F, std::integer_sequence<Integral, Sequence...>, E>(std::forward<F>(f),
                                                           std::forward<E>(e)));
 
   template<typename F, typename IndexSeq, typename E>

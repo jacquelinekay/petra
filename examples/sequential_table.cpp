@@ -4,8 +4,8 @@
 #include <cassert>
 #include <iostream>
 
-template<std::size_t N>
-static constexpr auto fill_array(std::integral_constant<std::size_t, N>&&) {
+template<auto N>
+static constexpr auto fill_array(std::integral_constant<decltype(N), N>&&) {
   std::array<int, N> buckets;
   /* ... */
   (void)buckets;
