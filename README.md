@@ -73,7 +73,9 @@ How do Petra's map constructs (`string_map`, `sequential_table`, etc.) handle in
 
 For a `sequential_table` of N values, an invalid input is an integer greater than or equal to than N. When `sequential_table` encounters an invalid input at runtime, it passes a `std::integral_constant` with a value of N to the user-provided callback.
 
-For a `switch_table`, 
+For a `switch_table`, the switch table passes a library-specific empty type, `petra::InvalidInputType` to the user-provided callback by default. The user callback must put error handling logic in an `if constexpr` branch, or provide an overload set which handles this case. You can opt out of this behavior in the constructor/factory functions for `switch_table`, but this will only work if your callback returns `void`.
+
+For `string_map`, the default error value to callbacks is the empty string by default, but this can be changed by selecting the correct factory function. However, it should be noted that the string hashing algorithm used has collisions outside of the input set, so string inputs outside of the input set should be considered UB. For best results, use a large input set.
 
 ## Build and Install
 
