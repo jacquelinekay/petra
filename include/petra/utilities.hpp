@@ -10,7 +10,11 @@
 #include "petra/utilities/fold.hpp"
 
 namespace petra {
+
+  struct InvalidInputError {};
+
   namespace utilities {
+
     template<typename T>
     struct type_tag {
       using type = T;
@@ -82,17 +86,10 @@ namespace petra {
       }
     }
 
-    // XXX
-    /*
-    template<typename Product>
-    struct product_to_sum {
-      using type = decltype(std::apply(unwrap, std::declval<Product>()));
-    private:
-      static constexpr auto unwrap = [](auto&&... args) {
-        return std::variant<std::decay_t<decltype(args)>...>{};
-      }
-    };
-    */
+    template<typename T>
+    constexpr bool is_error_type() {
+      return std::is_same<std::decay_t<T>, InvalidInputError>{};
+    }
 
   }  // namespace utilities
 }  // namespace petra

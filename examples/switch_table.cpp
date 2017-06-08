@@ -11,6 +11,10 @@ struct printer {
   void operator()(std::integral_constant<std::size_t, N>) const {
     std::cout << N << "\n";
   }
+
+  void operator()(petra::InvalidInputError&&) const {
+    std::cout << "Received a value that wasn't in the input set\n";
+  }
 };
 
 int main(int argc, char** argv) {
@@ -19,6 +23,7 @@ int main(int argc, char** argv) {
   }
   const int index = atoi(argv[1]);
 
-  auto switch_table = petra::make_switch_table<100, 42, 8, 0>(printer{});
+  auto switch_table =
+      petra::make_switch_table<std::size_t, 100, 42, 8, 0>(printer{});
   switch_table(index);
 }

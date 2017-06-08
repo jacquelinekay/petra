@@ -220,19 +220,24 @@ namespace petra {
         // initial values maps to unique values
         using KeySequence = std::decay_t<decltype(keys)>;
         constexpr auto table_callback = [unique_values](auto&& index) {
-          constexpr auto I =
-              map_to_index<std::decay_t<decltype(index)>::value>(KeySequence{});
-
-          if constexpr (I >= tuple_size(unique_values)) {
-            return std::make_pair(hash_status::Empty, 0);
+          if constexpr (utilities::is_error_type<decltype(index)>()) {
+            return std::make_pair(hash_status::Empty, 0ul);
           } else {
-            return std::get<I>(unique_values);
+            constexpr auto I =
+                map_to_index<std::decay_t<decltype(index)>::value>(
+                    KeySequence{});
+
+            if constexpr (I >= tuple_size(unique_values)) {
+              return std::make_pair(hash_status::Empty, 0ul);
+            } else {
+              return std::get<I>(unique_values);
+            }
           }
         };
-        return IntermediateHash<
-            decltype(table_callback), std::decay_t<decltype(keys)>,
-            std::decay_t<std::pair<hash_status, std::size_t>>>(
-            std::move(table_callback), std::make_pair(hash_status::Empty, 0));
+
+        return IntermediateHash<decltype(table_callback),
+                                std::decay_t<decltype(keys)>>(
+            std::move(table_callback));
       }
     }
 

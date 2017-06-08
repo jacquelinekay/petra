@@ -34,7 +34,7 @@ int main() {
     constexpr auto test_with_error = [](auto&& i) {
       return std::decay_t<decltype(i)>::value;
     };
-    auto table = petra::make_sequential_table<Size>(test_with_error, Size);
+    auto table = petra::make_sequential_table<Size>(test_with_error);
     // run_test(table);
     // Try with an integer not in the set
     PETRA_ASSERT(table(20) == Size);
