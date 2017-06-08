@@ -23,11 +23,8 @@ int main(int argc, char** argv) {
     return 255;
   }
 
-  constexpr auto get_result =
-    petra::make_sequential_table<10>(
-      [](auto&& i){
-        return fill_array(std::forward<decltype(i)>(i));
-      });
+  constexpr auto get_result = petra::make_sequential_table<10>(
+      [](auto&& i) { return fill_array(std::forward<decltype(i)>(i)); });
   get_result(x);
 
   return 0;

@@ -20,10 +20,12 @@ int main(int argc, char** argv) {
   const char* input = argv[1];
 
   auto callback = [](auto&& token) {
-    std::cout << "hash value: " << std::decay_t<decltype(token)>::value() << "\n";
+    std::cout << "hash value: " << std::decay_t<decltype(token)>::value()
+              << "\n";
   };
 
-  auto map = petra::make_string_map(callback, "hello"_s, "goodbye"_s, "dog"_s, "fish"_s, "cat"_s);
+  auto map = petra::make_string_map(callback, "hello"_s, "goodbye"_s, "dog"_s,
+                                    "fish"_s, "cat"_s);
 
   map(input);
 

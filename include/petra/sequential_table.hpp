@@ -9,18 +9,17 @@
 namespace petra {
 
 #define PETRA_RECURSIVE_SWITCH_TABLE_RETURNS()                                 \
-  callable(std::integral_constant<Integral, I>{},                           \
-           std::forward<Args>(args)...)
+  callable(std::integral_constant<Integral, I>{}, std::forward<Args>(args)...)
 
 #define PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY()                              \
   using Result =                                                               \
       std::result_of_t<F(std::integral_constant<Integral, I>, Args...)>;       \
-  if constexpr (std::is_signed<Integral>{} && N < 0 && I) {                  \
+  if constexpr (std::is_signed<Integral>{} && N < 0 && I) {                    \
     switch (i) {                                                               \
       case I: return PETRA_RECURSIVE_SWITCH_TABLE_RETURNS();                   \
       default: return apply<I - 1>(i, std::forward<Args>(args)...);            \
     }                                                                          \
-  } else if constexpr (std::is_unsigned<Integral>{} && I < N) {              \
+  } else if constexpr (std::is_unsigned<Integral>{} && I < N) {                \
     switch (i) {                                                               \
       case I: return PETRA_RECURSIVE_SWITCH_TABLE_RETURNS();                   \
       default: return apply<I + 1>(i, std::forward<Args>(args)...);            \
