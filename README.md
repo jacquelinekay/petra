@@ -8,27 +8,49 @@ C++17 metaprogramming library for transforming runtime values to compile-time va
 
 ## Motivation
 
-From template metaprogramming to the `constexpr` keyword, C++ offers powerful and expressive tools for writing code which is guaranteed to execute at compile time and therefore can be optimized out at runtime. A "compile-time value" (a non-type template parameter or the result of a core constant expression) can be arbitrarily used in a program anywhere a "runtime-determined value" (e.g. a value read from `stdin` or from a file) can. The rules of the language prevent us from arbitrarily declaring a value assigned from a non-constant expression as `constexpr`:
+From template metaprogramming to `constexpr`, C++ offers powerful and expressive tools for writing code which is guaranteed to execute at compile time and therefore can be optimized out at runtime. A "compile-time value" (a non-type template parameter or the result of a core constant expression) can be arbitrarily used in a program anywhere a "runtime-determined value" (e.g. a value read from `stdin` or from a file) can. But the reverse is not true:
 
-```
+```c++
+template<std::size_t N>
+auto fill_array() {
+  std::array<int, N> buckets;
+  /* ... */
+}
+
 int main(int argc, char** argv) {
   int x = atoi(argv[1]);
   assert(x < 10);
-  constexpr int y = x;  // Compiler error
-
-  std::array<int, y> buckets;
+  auto result = fill_array<x>();  // compiler error
 }
 ```
 
-But what if the programmer wants to use a runtime-determined value in a constexpr context?
+What if you want to use a runtime-determined value in a constexpr context?
 
-TODO:
-```
+Petra makes this easy:
+
+```c++
+template<std::size_t N>
+auto fill_array() {
+  std::array<int, N> buckets;
+  /* ... */
+}
+
 int main(int argc, char** argv) {
   int x = atoi(argv[1]);
-  constexpr auto unwrap = petra::make_sequential_table<10>([](auto&& x){ return x(); });
-  constexpr int y = unwrap(i);
-  std::array<int, y> buckets;
+  constexpr auto get_result = petra::make_sequential_table<10>([](auto&& x){
+    return fill_array<x()>(); 
+  );
+  auto result = get_result(i);
+}
+```
+
+If you're an experienced library writer, you may have already identified the technique used to implement this example: a compile-time jump table. This construct forms the basis of `variant` and `tuple`. But what if you want to transform more complicated data types, like strings?
+
+Petra supports mapping strings from runtime `const char*`'s to a compile-time string representation when the set of strings is known at compile time, by way of a string hash with constant runtime complexity: 
+
+```
+int main(int argc, char** argv) {
+  const char* token = argv[1];
 }
 ```
 
