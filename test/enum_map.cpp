@@ -16,9 +16,15 @@ int main() {
           [](auto&& e_constant, auto&& test_constant) {
             using TestType = std::decay_t<decltype(test_constant)>;
             using EnumType = std::decay_t<decltype(e_constant)>;
-            static_assert(std::is_same<typename EnumType::value_type, Color>{});
-            static_assert(std::is_same<typename TestType::value_type, Color>{});
-            PETRA_ASSERT(EnumType::value == TestType::value);
+            if constexpr (petra::utilities::is_error_type<EnumType>()) {
+              PETRA_ASSERT(false);
+            } else {
+              static_assert(
+                  std::is_same<typename EnumType::value_type, Color>{});
+              static_assert(
+                  std::is_same<typename TestType::value_type, Color>{});
+              PETRA_ASSERT(EnumType::value == TestType::value);
+            }
           });
 
   enum_table(Color::Red, color_constant<Color::Red>{});

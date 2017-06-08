@@ -23,13 +23,20 @@ namespace petra {
   private:
     F callback;
     static constexpr std::size_t size = sizeof...(Values);
-    static constexpr auto cast_to_enum = petra::make_switch_table<
-        Integral, static_cast<Integral>(Values)...>([](auto&& integer, auto& cb,
-                                                       auto&&... args) {
-      using Input = std::decay_t<decltype(integer)>;
-      constexpr std::integral_constant<Enum, static_cast<Enum>(Input::value)> e;
-      return cb(e, std::forward<decltype(args)>(args)...);
-    });
+    static constexpr auto cast_to_enum =
+        petra::make_switch_table<Integral, static_cast<Integral>(Values)...>(
+            [](auto&& input, auto& cb, auto&&... args) {
+              using Input = std::decay_t<decltype(input)>;
+              if constexpr (utilities::is_error_type<Input>()) {
+                // propagate the error
+                return cb(input, std::forward<decltype(args)>(args)...);
+              } else {
+                constexpr std::integral_constant<Enum, static_cast<Enum>(
+                                                           Input::value)>
+                    e;
+                return cb(e, std::forward<decltype(args)>(args)...);
+              }
+            });
   };
 
   template<typename Enum, Enum... Values, typename F>

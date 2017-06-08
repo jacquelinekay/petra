@@ -11,9 +11,9 @@
 namespace petra {
 
   template<auto I, typename T, T... Sequence, decltype(I)... Indices>
-  static constexpr decltype(I)
-  access_sequence_helper(const std::integer_sequence<T, Sequence...>&,
-                         const std::integer_sequence<decltype(I), Indices...>&) {
+  static constexpr decltype(I) access_sequence_helper(
+      const std::integer_sequence<T, Sequence...>&,
+      const std::integer_sequence<decltype(I), Indices...>&) {
     return ((Indices == I ? Sequence : 0) + ...);
   }
 
@@ -42,13 +42,15 @@ namespace petra {
 
   template<auto I, typename... T, decltype(I)... J>
   static constexpr std::size_t
-  map_to_index_helper(std::tuple<T...>&& t, std::integer_sequence<decltype(I), J...>&&) {
+  map_to_index_helper(std::tuple<T...>&& t,
+                      std::integer_sequence<decltype(I), J...>&&) {
     return ((I == std::get<J>(t) ? J : 0) + ...);
   }
 
   template<auto I, typename... T>
   static constexpr std::size_t map_to_index(std::tuple<T...>&& t) {
-    return map_to_index_helper<I>(t, std::make_integer_sequence<decltype(I), sizeof...(T)>{});
+    return map_to_index_helper<I>(
+        t, std::make_integer_sequence<decltype(I), sizeof...(T)>{});
   }
 
   template<auto I, decltype(I)... J>
@@ -62,7 +64,8 @@ namespace petra {
   }
 
   template<auto I, decltype(I)... Is>
-  static constexpr auto pop_front(const std::integer_sequence<decltype(I), I, Is...>&) {
+  static constexpr auto
+  pop_front(const std::integer_sequence<decltype(I), I, Is...>&) {
     return std::make_pair(I, std::integer_sequence<decltype(I), Is...>{});
   }
 
@@ -117,12 +120,15 @@ namespace petra {
   }
 
   template<typename T, T... Sequence>
-  static constexpr bool unique(const std::integer_sequence<T, Sequence...>& seq) {
+  static constexpr bool
+  unique(const std::integer_sequence<T, Sequence...>& seq) {
     return seq.size() == remove_repeats(seq).size();
   }
 
   template<typename T>
-  static constexpr auto concatenate() { return std::integer_sequence<T>{}; }
+  static constexpr auto concatenate() {
+    return std::integer_sequence<T>{};
+  }
 
   template<typename T, T... I>
   constexpr auto concatenate(std::integer_sequence<T, I...> i) {
@@ -137,7 +143,8 @@ namespace petra {
 
   template<typename T, T... I, T... J, typename... Ts>
   static constexpr auto concatenate(std::integer_sequence<T, I...>&& is,
-                                    std::integer_sequence<T, J...>&& js, Ts&&... ts) {
+                                    std::integer_sequence<T, J...>&& js,
+                                    Ts&&... ts) {
     return concatenate(concatenate(is, js), ts...);
   }
 

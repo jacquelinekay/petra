@@ -46,13 +46,13 @@ int main(int argc, char** argv) {
 
 If you're an experienced library writer, you may have already identified the technique used to implement this example: a compile-time jump table. This construct forms the basis of `variant` and `tuple`.
 
-Petra provides runtime-to-compile-time jump tables for all primitive integral types, and for sets of enums. But what if you want to transform more complicated data types, like strings?
+Petra provides runtime-to-compile-time jump tables for all primitive integral types, and for enum types. `sequential_table` expects the inputs to be integers from 0 to N, while `switch_table` expects an arbitrary sequence of integers of the same type. But what if you want to transform more complicated data types, like strings?
 
 Petra supports mapping strings from runtime `const char*`'s to a compile-time string representation when the set of strings is known at compile time, by way of a string hash with constant runtime complexity.
 
 This example simply prints a string read in from the command line. However, notice how that the string is accessed as a static member of a type-level string:
 
-```
+```c++
 int main(int argc, char** argv) {
   const char* input = argv[1];
 
@@ -69,9 +69,11 @@ int main(int argc, char** argv) {
 
 ### Error handling
 
-### Aggregate literal types
+How do Petra's map constructs (`string_map`, `sequential_table`, etc.) handle inputs which are outside of the valid set of compile-time keys?
 
-### Building more complex data structures
+For a `sequential_table` of N values, an invalid input is an integer greater than or equal to than N. When `sequential_table` encounters an invalid input at runtime, it passes a `std::integral_constant` with a value of N to the user-provided callback.
+
+For a `switch_table`, 
 
 ## Build and Install
 
@@ -103,18 +105,19 @@ You can also install the headers with:
 cmake --build . --target install
 ```
 
-## Usage
+## Summary of headers
 
 Petra's utilities include:
 
 - `switch_table.hpp`: Given an integer sequence at compile-time, constructs a constexpr mapping from an integer value to the `std::integral_constant` representing the same value, so that a (possibly runtime-determined) integer value can be used in a template context.
 - `sequential_table.hpp`: A specialization of `switch_table` for sequential integers.
+- `enum_map.hpp`: A wrapper around `switch_table` for enum types.
 - `chd.hpp`: Given a set of strings at compile time, constructs a hash from a `const char*` to an integer index with constant runtime complexity. (Petra also provides its own compile-time string class.) Petra's interface supports heterogenous types in the input set; that is, you could hash a set containing both strings and integers. `chd` also has customization points for computing a hash for a user-provided type. The algorithm is based heavily on Steve Hanov's implementation in his [blog post](http://stevehanov.ca/blog/index.php?id=119).
 - `linear_hash.hpp`: A linear time complexity hash meant to be used as a fallback for `chd` when given small input sets, which it cannot handle.
-- `callback_table.hpp`: Building on `chd` and `sequential_table`, a system for triggering callbacks given a heterogenous set of inputs.
-- `map.hpp`: A heterogenous map with variant-like access.
+- `string_map.hpp`: A convenience wrapper around `chd` which maps runtime strings to compile-time strings.
+- `map.hpp`: A heterogenous map with variant-like access. Its keys are specified at compile time, but the values are mutable at runtime (as long as they do not change type). The API uses the library's built-in `expected` type, which is provided in `expected.hpp`.
 
-If you find these features useful or interesting, check out `examples` to see how they are used.
+If these features sound useful or interesting to you, check out the `examples` folder to see how they are used.
 
 ## Roadmap
 
