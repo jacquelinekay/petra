@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
   int x = atoi(argv[1]);
   constexpr auto get_result = petra::make_sequential_table<10>([](auto&& x){
     return fill_array<x()>();
-  );
+  });
   auto result = get_result(i);
 }
 ```
