@@ -15,7 +15,7 @@ namespace petra {
     static constexpr bool use_fallback = set_size <= 4;
 
     template<typename RuntimeType>
-    static constexpr std::size_t hash(const RuntimeType& input) {
+    static constexpr std::size_t hash(const RuntimeType& input) noexcept {
       if constexpr (!use_fallback) {
         using adl::chd;
         std::size_t key = chd(0, input, set_size, adl::chd_tag{});
@@ -33,7 +33,7 @@ namespace petra {
     }
 
     template<typename RuntimeType>
-    constexpr auto operator()(const RuntimeType& input) const {
+    constexpr auto operator()(const RuntimeType& input) const noexcept {
       return hash(input);
     }
 
@@ -41,7 +41,7 @@ namespace petra {
     static constexpr auto second_hash =
         detail::construct_hash<IntermediateHash, Inputs...>();
 
-    static constexpr bool no_collisions() {
+    static constexpr bool no_collisions() noexcept {
       return unique(std::index_sequence<hash(Inputs{})...>{});
     }
 
@@ -50,27 +50,27 @@ namespace petra {
 
   template<template<typename...> typename Hash, typename... Args,
            typename = std::enable_if_t<(Constant<Args>() && ...)>>
-  static constexpr auto make_chd() {
+  static constexpr auto make_chd() noexcept {
     return CHDHash<Hash, Args...>{};
   }
 
   template<typename... Args,
            typename = std::enable_if_t<(Constant<Args>() && ...)>>
-  static constexpr auto make_chd() {
+  static constexpr auto make_chd() noexcept {
     return CHDHash<SwitchTable, Args...>{};
   }
 
   template<
       template<typename...> typename Hash, typename A, typename... Args,
       typename = std::enable_if_t<Constant<A>() && (Constant<Args>() && ...)>>
-  static constexpr auto make_chd(A&&, Args&&...) {
+  static constexpr auto make_chd(A&&, Args&&...) noexcept {
     return CHDHash<Hash, std::decay_t<A>, std::decay_t<Args>...>{};
   }
 
   template<
       typename A, typename... Args,
       typename = std::enable_if_t<Constant<A>() && (Constant<Args>() && ...)>>
-  static constexpr auto make_chd(A&&, Args&&...) {
+  static constexpr auto make_chd(A&&, Args&&...) noexcept {
     return CHDHash<SwitchTable, std::decay_t<A>, std::decay_t<Args>...>{};
   }
 

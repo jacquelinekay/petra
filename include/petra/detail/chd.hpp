@@ -24,16 +24,18 @@ namespace petra {
 
     struct chd_tag {};
 
+    // Precondition: D must be less than numeric_limits / chd_offset.
     static constexpr std::size_t chd(std::size_t d, std::size_t value,
-                                     std::size_t size, chd_tag&&) {
+                                     std::size_t size, chd_tag&&) noexcept {
       if (d == 0) {
         d = chd_offset;
       }
       return (((d * chd_offset) ^ value) & 0xffffffff) % size;
     }
 
+    // Precondition: D must be less than numeric_limits / chd_offset.
     static constexpr std::size_t chd(std::size_t d, const char* s,
-                                     std::size_t size, chd_tag&&) {
+                                     std::size_t size, chd_tag&&) noexcept {
       if (*s == 0) {
         return d % size;
       }
@@ -47,7 +49,7 @@ namespace petra {
     template<typename T, T... Pack>
     static constexpr std::size_t chd(std::size_t d,
                                      const string_literal<T, Pack...>&,
-                                     std::size_t size, chd_tag&&) {
+                                     std::size_t size, chd_tag&&) noexcept {
       return chd(d, string_literal<T, Pack...>::value(), size, chd_tag{});
     }
   }  // namespace adl
@@ -63,14 +65,14 @@ namespace petra {
         std::numeric_limits<std::size_t>::max() / chd_offset;
 
     template<typename... Inputs>
-    static constexpr auto make_unique_seq() {
+    static constexpr auto make_unique_seq() noexcept {
       return remove_repeats(
           std::index_sequence<chd(0, Inputs{}, sizeof...(Inputs),
                                   adl::chd_tag{})...>{});
     }
 
     template<typename... Inputs>
-    static constexpr auto initialize_dictionary() {
+    static constexpr auto initialize_dictionary() noexcept {
       using adl::chd;
       constexpr auto unique_seq = make_unique_seq<Inputs...>();
 
@@ -140,7 +142,7 @@ namespace petra {
 
     template<template<typename...> typename IntermediateHash,
              typename... Inputs>
-    static constexpr auto construct_hash() {
+    static constexpr auto construct_hash() noexcept {
       constexpr std::size_t set_size = sizeof...(Inputs);
       if constexpr (set_size <= 4) {
         return LinearHash<Inputs...>{};
@@ -219,7 +221,7 @@ namespace petra {
 
         // initial values maps to unique values
         using KeySequence = std::decay_t<decltype(keys)>;
-        constexpr auto table_callback = [unique_values](auto&& index) {
+        constexpr auto table_callback = [unique_values](auto&& index) noexcept {
           if constexpr (utilities::is_error_type<decltype(index)>()) {
             return std::make_pair(hash_status::Empty, 0ul);
           } else {

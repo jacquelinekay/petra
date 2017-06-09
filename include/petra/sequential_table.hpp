@@ -38,7 +38,6 @@ namespace petra {
 
     constexpr SequentialTable(F&& f) : callable(f) {}
 
-    // TODO: Clean up
     template<Integral I, typename... Args>
     constexpr auto apply(Integral i, Args&&... args) noexcept(
         noexcept(PETRA_RECURSIVE_SWITCH_TABLE_RETURNS())) {

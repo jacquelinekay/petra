@@ -10,6 +10,9 @@
 
 namespace petra {
 
+#define PETRA_NOEXCEPT_FUNCTION_BODY(...)                                      \
+  noexcept(noexcept(__VA_ARGS__)) { return __VA_ARGS__; }
+
   /* Provides runtime to compile-time string mapping for strings
    *
    * Interface:
@@ -26,17 +29,10 @@ namespace petra {
   struct StringMap {
     constexpr StringMap(F&& f) : callback(f) {}
 
-    constexpr decltype(auto) operator()(const char* input) {
-      const std::size_t index = chd(input);
-      return petra::make_sequential_table<size>([this](auto&& index) {
-        constexpr std::size_t I = std::decay_t<decltype(index)>::value;
-        if constexpr (I < size) {
-          return callback(std::get<index_map[I]>(inputs));
-        } else {
-          return callback(ErrorString{});
-        }
-      })(index);
-    }
+    template<typename... Args>
+    constexpr decltype(auto) operator()(const char* input, Args&&... args)
+    PETRA_NOEXCEPT_FUNCTION_BODY(
+        matched_callback(chd(input), this->callback, std::forward<Args>(args)...));
 
   private:
     F callback;
@@ -47,6 +43,18 @@ namespace petra {
     using index_map_t = std::array<std::size_t, size>;
     static constexpr index_map_t index_map =
         detail::init_index_map<index_map_t, chd(Inputs{})...>(index_map_t{});
+
+    static constexpr auto matched_callback =
+      petra::make_sequential_table<size>([](auto&& index, auto& callback, auto&&... args)
+      noexcept((noexcept(callback(Inputs{}, args...)) &&...) && noexcept(callback(ErrorString{}, args...)))
+      {
+        constexpr std::size_t I = std::decay_t<decltype(index)>::value;
+        if constexpr (I < size) {
+          return callback(std::get<index_map[I]>(inputs), args...);
+        } else {
+          return callback(ErrorString{}, args...);
+        }
+      });
   };
 
   template<typename F, typename... Inputs>
@@ -60,5 +68,7 @@ namespace petra {
                                         ErrorString&&) {
     return StringMap<F, ErrorString, Inputs...>(std::forward<F>(f));
   }
+
+#undef PETRA_NOEXCEPT_FUNCTION_BODY
 
 }  // namespace petra

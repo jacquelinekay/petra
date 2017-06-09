@@ -5,29 +5,66 @@
 #include "petra/enum_map.hpp"
 #include "utilities.hpp"
 
-enum struct Color { Red, Green, Blue, Error };
+#include <unordered_map>
+
+enum struct Color { Red, Green, Blue};
 
 template<Color c>
 using color_constant = std::integral_constant<Color, c>;
 
-int main() {
-  auto enum_table =
-      petra::make_enum_map<Color, Color::Red, Color::Green, Color::Blue>(
-          [](auto&& e_constant, auto&& test_constant) {
-            using TestType = std::decay_t<decltype(test_constant)>;
-            using EnumType = std::decay_t<decltype(e_constant)>;
-            if constexpr (petra::utilities::is_error_type<EnumType>()) {
-              PETRA_ASSERT(false);
-            } else {
-              static_assert(
-                  std::is_same<typename EnumType::value_type, Color>{});
-              static_assert(
-                  std::is_same<typename TestType::value_type, Color>{});
-              PETRA_ASSERT(EnumType::value == TestType::value);
-            }
-          });
+struct test {
 
-  enum_table(Color::Red, color_constant<Color::Red>{});
-  enum_table(Color::Green, color_constant<Color::Green>{});
-  enum_table(Color::Blue, color_constant<Color::Blue>{});
+  template<Color A, Color B>
+  void operator()(color_constant<A>&&, color_constant<B>&&) noexcept {
+    PETRA_ASSERT(A == B);
+    PETRA_ASSERT(++results[A] == 1);
+  }
+
+  template<Color A, typename T>
+  void operator()(color_constant<A>&&, T) noexcept {
+    PETRA_ASSERT(false);
+  }
+
+  template<typename T>
+  void operator()(petra::InvalidInputError&&, T&&) noexcept {
+    PETRA_ASSERT(petra::utilities::is_error_type<T>());
+    for (const auto& result : results) {
+      PETRA_ASSERT(result.second == 1);
+    }
+  }
+
+  std::unordered_map<Color, std::size_t> results;
+};
+
+int main() {
+  {
+    auto enum_table =
+        petra::make_enum_map<Color, Color::Red, Color::Green, Color::Blue>(
+            test{});
+
+    static_assert(noexcept(
+        enum_table(std::declval<Color>(), color_constant<Color::Red>{})));
+    static_assert(noexcept(
+        enum_table(std::declval<Color>(), color_constant<Color::Green>{})));
+    static_assert(noexcept(
+        enum_table(std::declval<Color>(), color_constant<Color::Blue>{})));
+
+    enum_table(Color::Red, color_constant<Color::Red>{});
+    enum_table(Color::Green, color_constant<Color::Green>{});
+    enum_table(Color::Blue, color_constant<Color::Blue>{});
+
+    std::underlying_type_t<Color> x = 4;
+    enum_table(static_cast<Color>(x), petra::InvalidInputError{});
+  }
+
+  {
+    auto enum_table =
+        petra::make_enum_map<Color, Color::Red, Color::Green, Color::Blue>(
+          [](auto&&) {
+            throw std::runtime_error("Catch this!");
+          }
+        );
+
+    static_assert(!noexcept(enum_table(std::declval<Color>())));
+  }
 }

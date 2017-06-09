@@ -31,13 +31,29 @@ int main() {
   { run_test(petra::make_sequential_table<Size>(test{})); }
 
   {
-    constexpr auto test_with_error = [](auto&& i) {
+    constexpr auto test_with_error = [](auto&& i) noexcept {
       return std::decay_t<decltype(i)>::value;
     };
     auto table = petra::make_sequential_table<Size>(test_with_error);
-    // run_test(table);
+
+    static_assert(noexcept(table(std::declval<std::size_t>())));
+
+    run_test(table);
     // Try with an integer not in the set
     PETRA_ASSERT(table(20) == Size);
+  }
+
+  {
+    // Try with a throwing callback
+    auto test_with_exception = [](auto&& i) {
+      using T = std::decay_t<decltype(i)>;
+      if constexpr (T::value == Size) {
+        throw std::runtime_error("Invalid input detected");
+      }
+      return T::value;
+    };
+    auto table = petra::make_sequential_table<Size>(test_with_exception);
+    static_assert(!noexcept(table(std::declval<std::size_t>())));
   }
 
   return 0;

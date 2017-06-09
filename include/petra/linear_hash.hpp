@@ -11,37 +11,37 @@
 
 /* This is a fallback option for small input sets which CHD can't handle.
  * It has linear runtime complexity, but for small sizes (less than 4) this may
- * be
- * acceptable.
+ * be acceptable.
  * */
 
 namespace petra {
 
+#define PETRA_NOEXCEPT_FUNCTION_BODY(...)                                      \
+  noexcept(noexcept(__VA_ARGS__)) { return __VA_ARGS__; }
+
   template<typename... Inputs>
   struct LinearHash {
     template<typename RuntimeType>
-    static constexpr decltype(auto) hash(RuntimeType&& input) {
-      return helper(std::forward<RuntimeType>(input),
-                    std::index_sequence_for<Inputs...>{});
-    }
+    static constexpr decltype(auto) hash(RuntimeType&& input)
+    PETRA_NOEXCEPT_FUNCTION_BODY(helper(std::forward<RuntimeType>(input),
+                    std::index_sequence_for<Inputs...>{}));
 
     template<typename RuntimeType>
-    constexpr decltype(auto) operator()(RuntimeType&& input) const {
-      return hash(std::forward<RuntimeType>(input));
-    }
+    constexpr decltype(auto) operator()(RuntimeType&& input) const
+    PETRA_NOEXCEPT_FUNCTION_BODY(hash(std::forward<RuntimeType>(input)));
 
   private:
     static constexpr auto inputs = std::make_tuple(Inputs{}...);
 
     template<typename RuntimeType>
     static constexpr decltype(auto) helper(RuntimeType&&,
-                                           std::index_sequence<>&&) {
+                                           std::index_sequence<>&&) noexcept {
       return sizeof...(Inputs);
     }
 
     template<typename RuntimeType, std::size_t I, std::size_t... J>
     static constexpr decltype(auto) helper(RuntimeType&& input,
-                                           std::index_sequence<I, J...>&&) {
+                                           std::index_sequence<I, J...>&&) noexcept {
       if (std::get<I>(inputs) == input) {
         return I;
       } else {
@@ -55,5 +55,7 @@ namespace petra {
   constexpr decltype(auto) make_linear_hash(Inputs&&...) {
     return LinearHash<Inputs...>{};
   }
+
+#undef PETRA_NOEXCEPT_FUNCTION_BODY
 
 }  // namespace petra

@@ -15,7 +15,7 @@ using TestSet =
 
 struct test {
   template<std::size_t N>
-  void operator()(std::integral_constant<std::size_t, N>&&) {
+  void operator()(std::integral_constant<std::size_t, N>&&) noexcept {
     std::cout << N << std::endl;
     constexpr std::size_t Index = petra::map_to_index<N>(TestSet{});
     PETRA_ASSERT(Index < TestSet::size());
@@ -23,7 +23,7 @@ struct test {
     PETRA_ASSERT(results[Index] == 1);
   }
 
-  void operator()(petra::InvalidInputError&&) { PETRA_ASSERT(false); }
+  void operator()(petra::InvalidInputError&&) noexcept { PETRA_ASSERT(false); }
 
   std::array<std::size_t, TestSet::size()> results = {{0}};
 };
@@ -35,6 +35,7 @@ void run_test(S&& table) {
 
 template<typename S, size_t... I>
 void run_test(std::index_sequence<I...>, S&& table) {
+  static_assert(noexcept(table(std::declval<std::size_t>())));
   (table(I), ...);
 }
 
@@ -42,7 +43,7 @@ int main() {
   { run_test<TestSet>(petra::make_switch_table(test{}, TestSet{})); }
 
   {
-    constexpr auto test_with_error = [](auto&& i) {
+    constexpr auto test_with_error = [](auto&& i) noexcept {
       if constexpr (petra::utilities::is_error_type<decltype(i)>()) {
         return TestSet::size();
       } else {
@@ -53,6 +54,20 @@ int main() {
     // run_test(table);
     // Try with an integer not in the set
     PETRA_ASSERT(table(33) == TestSet::size());
+  }
+
+  {
+    auto test_with_exception = [](auto&& i) {
+      if constexpr (petra::utilities::is_error_type<decltype(i)>()) {
+        throw std::runtime_error("Detected invalid input.");
+        return TestSet::size();
+      } else {
+        return std::decay_t<decltype(i)>::value;
+      }
+    };
+    auto table = petra::make_switch_table(test_with_exception, TestSet{});
+
+    static_assert(!noexcept(table(std::declval<std::size_t>())));
   }
   return 0;
 }

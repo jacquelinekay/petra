@@ -5,7 +5,7 @@
 #include <iostream>
 
 template<auto N>
-static constexpr auto fill_array(std::integral_constant<decltype(N), N>&&) {
+static constexpr auto fill_array(std::integral_constant<decltype(N), N>&&) noexcept {
   std::array<int, N> buckets;
   /* ... */
   (void)buckets;
@@ -24,7 +24,8 @@ int main(int argc, char** argv) {
   }
 
   constexpr auto get_result = petra::make_sequential_table<10>(
-      [](auto&& i) { return fill_array(std::forward<decltype(i)>(i)); });
+      [](auto&& i) noexcept { return fill_array(std::forward<decltype(i)>(i)); });
+
   get_result(x);
 
   return 0;
