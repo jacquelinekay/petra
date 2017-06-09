@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
               << "\n";
   };
 
-  auto map_to_type = petra::make_string_map("dog"_s, "fish"_s, "cat"_s);
+  auto map_to_type = petra::make_string_map(callback, "dog"_s, "fish"_s, "cat"_s);
 
   map_to_type(input);
 }
