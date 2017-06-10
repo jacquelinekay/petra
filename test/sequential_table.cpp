@@ -9,59 +9,82 @@
 #include <array>
 #include <iostream>
 
-constexpr std::size_t Size = 10;
+// constexpr std::size_t Size = 10;
+namespace petra {
+}
 
+template<auto Size>
 struct test {
-  template<std::size_t N>
-  void operator()(std::integral_constant<std::size_t, N>&&) {
+  using Integral = decltype(Size);
+  template<Integral N>
+  void operator()(std::integral_constant<Integral, N>&&) {
     std::cout << N << std::endl;
-    ++results[N];
-    PETRA_ASSERT(results[N] == 1);
+    ++results[petra::utilities::abs(N)];
+    PETRA_ASSERT(results[petra::utilities::abs(N)] == 1);
   }
   void operator()(petra::InvalidInputError&&) noexcept { PETRA_ASSERT(false); }
 
-  std::array<std::size_t, Size> results = {{0}};
+  std::array<std::size_t, petra::utilities::abs(Size)> results = {{0}};
 };
 
-template<typename S>
+template<auto Size, typename S>
 void run_test(S&& table) {
-  for (std::size_t i = 0; i < Size; ++i) { table(i); }
+  if constexpr (std::is_signed<decltype(Size)>{} && Size < 0) {
+    for (decltype(Size) i = 0; i > Size; --i) { table(i); }
+  } else {
+    for (decltype(Size) i = 0; i < Size; ++i) { table(i); }
+  }
 }
 
 int main() {
-  { run_test(petra::make_sequential_table<Size>(test{})); }
+  constexpr std::size_t USize = 10ul;
+  {
+    run_test<USize>(petra::make_sequential_table<USize>(test<USize>{}));
+  }
 
   {
-    constexpr auto test_with_error = [](auto&& i) noexcept {
+    constexpr auto test_with_error = [USize](auto&& i) noexcept {
       using T = decltype(i);
       if constexpr (petra::utilities::is_error_type<T>()) {
-        return Size;
+        return USize;
       } else {
         return std::decay_t<T>::value;
       }
     };
-    auto table = petra::make_sequential_table<Size>(test_with_error);
+    auto table = petra::make_sequential_table<USize>(test_with_error);
 
     static_assert(noexcept(table(std::declval<std::size_t>())));
 
-    run_test(table);
+    run_test<USize>(table);
     // Try with an integer not in the set
-    PETRA_ASSERT(table(20) == Size);
+    PETRA_ASSERT(table(20) == USize);
   }
 
   {
     // Try with a throwing callback
-    auto test_with_exception = [](auto&& i) {
+    auto test_with_exception = [USize](auto&& i) {
       using T = std::decay_t<decltype(i)>;
       if constexpr (petra::utilities::is_error_type<T>()) {
         throw std::runtime_error("Invalid input detected");
-        return Size;
+        return USize;
       } else {
         return T::value;
       }
     };
-    auto table = petra::make_sequential_table<Size>(test_with_exception);
+    auto table = petra::make_sequential_table<USize>(test_with_exception);
     static_assert(!noexcept(table(std::declval<std::size_t>())));
+  }
+
+  // Unsigned type
+  {
+    constexpr int SSize = 10;
+    run_test<SSize>(petra::make_sequential_table<SSize>(test<SSize>{}));
+  }
+
+  // Negative sequence
+  {
+    constexpr int SSize = -10;
+    run_test<SSize>(petra::make_sequential_table<SSize>(test<SSize>{}));
   }
 
   return 0;

@@ -17,12 +17,12 @@ namespace petra {
 #define PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY()                              \
   using Result =                                                               \
       std::result_of_t<F(std::integral_constant<Integral, I>, Args...)>;       \
-  if constexpr (std::is_signed<Integral>{} && N < 0 && I) {                    \
+  if constexpr (std::is_signed<Integral>{} && N < 0 && I > N) {                    \
     switch (i) {                                                               \
       case I: return PETRA_RECURSIVE_SWITCH_TABLE_RETURNS();                   \
       default: return apply<I - 1>(i, std::forward<Args>(args)...);            \
     }                                                                          \
-  } else if constexpr (std::is_unsigned<Integral>{} && I < N) {                \
+  } else if constexpr ((std::is_unsigned<Integral>{} || N > 0) && I < N) {                \
     switch (i) {                                                               \
       case I: return PETRA_RECURSIVE_SWITCH_TABLE_RETURNS();                   \
       default: return apply<I + 1>(i, std::forward<Args>(args)...);            \
@@ -36,7 +36,7 @@ namespace petra {
 
   // Utility for error handling
   template<typename T, auto Size>
-  static constexpr bool invalid_input() {
+  static constexpr bool invalid_input() noexcept {
     if constexpr (Constant<T>()) {
       if constexpr (std::is_integral<decltype(T::value)>{}) {
         return T::value >= Size;
@@ -51,7 +51,7 @@ namespace petra {
     using Integral = decltype(N);
     F callable;
 
-    constexpr SequentialTable(F&& f) : callable(f) {}
+    constexpr SequentialTable(F&& f) noexcept : callable(f) {}
 
     template<Integral I, typename... Args>
     constexpr auto apply(Integral i, Args&&... args) noexcept(
