@@ -7,13 +7,12 @@
 
 #include <unordered_map>
 
-enum struct Color { Red, Green, Blue};
+enum struct Color { Red, Green, Blue };
 
 template<Color c>
 using color_constant = std::integral_constant<Color, c>;
 
 struct test {
-
   template<Color A, Color B>
   void operator()(color_constant<A>&&, color_constant<B>&&) noexcept {
     PETRA_ASSERT(A == B);
@@ -28,9 +27,7 @@ struct test {
   template<typename T>
   void operator()(petra::InvalidInputError&&, T&&) noexcept {
     PETRA_ASSERT(petra::utilities::is_error_type<T>());
-    for (const auto& result : results) {
-      PETRA_ASSERT(result.second == 1);
-    }
+    for (const auto& result : results) { PETRA_ASSERT(result.second == 1); }
   }
 
   std::unordered_map<Color, std::size_t> results;
@@ -60,10 +57,7 @@ int main() {
   {
     auto enum_table =
         petra::make_enum_map<Color, Color::Red, Color::Green, Color::Blue>(
-          [](auto&&) {
-            throw std::runtime_error("Catch this!");
-          }
-        );
+            [](auto&&) { throw std::runtime_error("Catch this!"); });
 
     static_assert(!noexcept(enum_table(std::declval<Color>())));
   }

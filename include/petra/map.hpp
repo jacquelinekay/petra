@@ -61,11 +61,12 @@ namespace petra {
     key_at(std::size_t i) const {
       using E = Expected<const char*, MapAccessStatus>;
       return make_sequential_table<size>([](auto&& i, auto&& k) {
-        constexpr std::size_t I = std::decay_t<decltype(i)>::value;
-        if constexpr (I >= size) {
+        using T = std::decay_t<decltype(i)>;
+        if constexpr (invalid_input<T, size>()) {
           return E(MapAccessStatus::key_type_mismatch);
         } else {
-          return E(std::get<I>(k).value());
+          constexpr std::size_t I = T::value;
+          return E(std::get<I>(k).value);
         }
       })(i, keys);
     }
@@ -87,11 +88,11 @@ namespace petra {
           using R = typename decltype(type_tag)::type;
           using E = Expected<R, MapAccessStatus>;
           using Vs = std::decay_t<decltype(vs)>;
-          constexpr std::size_t I = std::decay_t<decltype(index)>::value;
-          if constexpr (I >= size) {
+          using T = std::decay_t<decltype(index)>;
+          if constexpr (invalid_input<T, size>()) {
             return E(MapAccessStatus::invalid_key);
           } else {
-            constexpr std::size_t Index = index_map[I];
+            constexpr std::size_t Index = index_map[T::value];
             if constexpr (std::is_same<std::tuple_element_t<Index, Vs>,
                                        typename R::type>{}) {
               return E(std::ref(std::get<Index>(vs)));
@@ -103,11 +104,11 @@ namespace petra {
 
     static constexpr auto set_value_hash =
         make_sequential_table<size>([](auto&& index, auto& vs, const auto&& v) {
-          constexpr std::size_t I = std::decay_t<decltype(index)>::value;
-          if constexpr (I >= size) {
+          using T = std::decay_t<decltype(index)>;
+          if constexpr (invalid_input<T, size>()) {
             return MapAccessStatus::invalid_key;
           } else {
-            constexpr std::size_t Index = index_map[I];
+            constexpr std::size_t Index = index_map[T::value];
             if constexpr (
                 std::is_same<
                     std::tuple_element_t<Index, std::decay_t<decltype(vs)>>,
@@ -120,23 +121,25 @@ namespace petra {
           }
         });
 
-    static constexpr auto visitor_hash = make_sequential_table<
-        size>([](auto&& index, auto& vs, auto&& visitor) {
-      constexpr std::size_t I = std::decay_t<decltype(index)>::value;
-      if constexpr (I >= size) {
-        return Expected<void, MapAccessStatus>(MapAccessStatus::invalid_key);
-      } else {
-        using R = std::result_of_t<decltype(visitor)(
-            std::tuple_element_t<index_map[I], std::decay_t<decltype(vs)>>)>;
-        using E = Expected<R, MapAccessStatus>;
-        if constexpr (!std::is_same<void, R>{}) {
-          return E(visitor(std::get<index_map[I]>(vs)));
-        } else {
-          visitor(std::get<index_map[I]>(vs));
-          return E();
-        }
-      }
-    });
+    static constexpr auto visitor_hash =
+        make_sequential_table<size>([](auto&& index, auto& vs, auto&& visitor) {
+          using T = std::decay_t<decltype(index)>;
+          if constexpr (invalid_input<T, size>()) {
+            return Expected<void, MapAccessStatus>(
+                MapAccessStatus::invalid_key);
+          } else {
+            constexpr std::size_t Index = index_map[T::value];
+            using R = std::result_of_t<decltype(visitor)(
+                std::tuple_element_t<Index, std::decay_t<decltype(vs)>>)>;
+            using E = Expected<R, MapAccessStatus>;
+            if constexpr (!std::is_same<void, R>{}) {
+              return E(visitor(std::get<Index>(vs)));
+            } else {
+              visitor(std::get<Index>(vs));
+              return E();
+            }
+          }
+        });
   };
 
   template<template<typename...> typename Hash, typename... Keys,

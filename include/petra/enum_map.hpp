@@ -24,14 +24,13 @@ namespace petra {
 
     template<typename... Args>
     constexpr decltype(auto) operator()(Enum input, Args&&... args)
-    PETRA_NOEXCEPT_FUNCTION_BODY(
-        cast_to_enum(static_cast<Integral>(input), callback,
-                          std::forward<Args>(args)...));
+        PETRA_NOEXCEPT_FUNCTION_BODY(cast_to_enum(static_cast<Integral>(input),
+                                                  callback,
+                                                  std::forward<Args>(args)...));
 
   private:
     F callback;
     static constexpr std::size_t size = sizeof...(Values);
-
 
     struct forward_callbacks {
       template<typename Callback, typename... Args>
@@ -44,13 +43,13 @@ namespace petra {
       template<auto I, typename Callback, typename... Args>
       constexpr auto operator()(std::integral_constant<decltype(I), I>&&,
                                 Callback& cb, Args&&... args) const
-          PETRA_NOEXCEPT_FUNCTION_BODY(
-              cb(enum_constant<static_cast<Enum>(I)>{},
-                 std::forward<Args>(args)...));
+          PETRA_NOEXCEPT_FUNCTION_BODY(cb(enum_constant<static_cast<Enum>(I)>{},
+                                          std::forward<Args>(args)...));
     };
 
     static constexpr auto cast_to_enum =
-        petra::make_switch_table<Integral, static_cast<Integral>(Values)...>(forward_callbacks{});
+        petra::make_switch_table<Integral, static_cast<Integral>(Values)...>(
+            forward_callbacks{});
   };
 
   template<typename Enum, Enum... Values, typename F>

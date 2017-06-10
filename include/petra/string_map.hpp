@@ -25,14 +25,14 @@ namespace petra {
    * );
    *
    * */
-  template<typename F, typename ErrorString, typename... Inputs>
+  template<typename F, typename Error, typename... Inputs>
   struct StringMap {
     constexpr StringMap(F&& f) : callback(f) {}
 
     template<typename... Args>
     constexpr decltype(auto) operator()(const char* input, Args&&... args)
-    PETRA_NOEXCEPT_FUNCTION_BODY(
-        matched_callback(chd(input), this->callback, std::forward<Args>(args)...));
+        PETRA_NOEXCEPT_FUNCTION_BODY(matched_callback(
+            chd(input), this->callback, std::forward<Args>(args)...));
 
   private:
     F callback;
@@ -45,28 +45,31 @@ namespace petra {
         detail::init_index_map<index_map_t, chd(Inputs{})...>(index_map_t{});
 
     static constexpr auto matched_callback =
-      petra::make_sequential_table<size>([](auto&& index, auto& callback, auto&&... args)
-      noexcept((noexcept(callback(Inputs{}, args...)) &&...) && noexcept(callback(ErrorString{}, args...)))
-      {
-        constexpr std::size_t I = std::decay_t<decltype(index)>::value;
-        if constexpr (I < size) {
-          return callback(std::get<index_map[I]>(inputs), args...);
-        } else {
-          return callback(ErrorString{}, args...);
-        }
-      });
+        petra::make_sequential_table<size>([](
+            auto&& index, auto& callback,
+            auto&&... args) noexcept((noexcept(callback(Inputs{}, args...))
+                                      && ...)
+                                     && noexcept(callback(Error{}, args...))) {
+          using T = std::decay_t<decltype(index)>;
+          if constexpr (invalid_input<T, size>()) {
+            return callback(Error{}, args...);
+          } else {
+            constexpr std::size_t I = index_map[T::value];
+            return callback(std::get<I>(inputs), args...);
+          }
+        });
   };
 
   template<typename F, typename... Inputs>
   static constexpr auto make_string_map(F&& f, Inputs&&...) {
-    // The default value of "ErrorString" is an empty string
-    return StringMap<F, string_literal<char>, Inputs...>(std::forward<F>(f));
+    // The default type of "Error" is InvalidInputError
+    return StringMap<F, InvalidInputError, Inputs...>(std::forward<F>(f));
   }
 
-  template<typename F, typename... Inputs, typename ErrorString>
+  template<typename F, typename... Inputs, typename Error>
   static constexpr auto make_string_map(F&& f, std::tuple<Inputs...>&&,
-                                        ErrorString&&) {
-    return StringMap<F, ErrorString, Inputs...>(std::forward<F>(f));
+                                        Error&&) {
+    return StringMap<F, Error, Inputs...>(std::forward<F>(f));
   }
 
 #undef PETRA_NOEXCEPT_FUNCTION_BODY

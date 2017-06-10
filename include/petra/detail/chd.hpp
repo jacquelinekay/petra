@@ -50,7 +50,7 @@ namespace petra {
     static constexpr std::size_t chd(std::size_t d,
                                      const string_literal<T, Pack...>&,
                                      std::size_t size, chd_tag&&) noexcept {
-      return chd(d, string_literal<T, Pack...>::value(), size, chd_tag{});
+      return chd(d, string_literal<T, Pack...>::value, size, chd_tag{});
     }
   }  // namespace adl
 

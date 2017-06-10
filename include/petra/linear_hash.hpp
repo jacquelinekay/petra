@@ -23,12 +23,13 @@ namespace petra {
   struct LinearHash {
     template<typename RuntimeType>
     static constexpr decltype(auto) hash(RuntimeType&& input)
-    PETRA_NOEXCEPT_FUNCTION_BODY(helper(std::forward<RuntimeType>(input),
-                    std::index_sequence_for<Inputs...>{}));
+        PETRA_NOEXCEPT_FUNCTION_BODY(
+            helper(std::forward<RuntimeType>(input),
+                   std::index_sequence_for<Inputs...>{}));
 
     template<typename RuntimeType>
     constexpr decltype(auto) operator()(RuntimeType&& input) const
-    PETRA_NOEXCEPT_FUNCTION_BODY(hash(std::forward<RuntimeType>(input)));
+        PETRA_NOEXCEPT_FUNCTION_BODY(hash(std::forward<RuntimeType>(input)));
 
   private:
     static constexpr auto inputs = std::make_tuple(Inputs{}...);
@@ -40,8 +41,8 @@ namespace petra {
     }
 
     template<typename RuntimeType, std::size_t I, std::size_t... J>
-    static constexpr decltype(auto) helper(RuntimeType&& input,
-                                           std::index_sequence<I, J...>&&) noexcept {
+    static constexpr decltype(auto)
+    helper(RuntimeType&& input, std::index_sequence<I, J...>&&) noexcept {
       if (std::get<I>(inputs) == input) {
         return I;
       } else {

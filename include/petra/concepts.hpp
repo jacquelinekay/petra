@@ -44,13 +44,14 @@ namespace petra {
 
   // Constant
   template<typename T>
-  using data_accessor_t = decltype(T::value());
+  using data_accessor_t = decltype(T::value);
 
   template<typename T>
   static constexpr bool Constant() {
-    return std::conjunction<
-        is_detected<data_accessor_t, T>,
-        std::bool_constant<Comparable<T, decltype(T::value())>()>>{};
+    if constexpr (is_detected<data_accessor_t, T>{}) {
+      return Comparable<T, decltype(T::value)>();
+    }
+    return false;
   }
 
 }  // namespace petra

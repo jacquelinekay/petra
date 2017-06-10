@@ -6,12 +6,17 @@
 
 #include <utility>
 
+#include "petra/concepts.hpp"
+#include "petra/utilities.hpp"
+
 namespace petra {
 
 #define PETRA_RECURSIVE_SWITCH_TABLE_RETURNS()                                 \
   callable(std::integral_constant<Integral, I>{}, std::forward<Args>(args)...)
 
 #define PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY()                              \
+  using Result =                                                               \
+      std::result_of_t<F(std::integral_constant<Integral, I>, Args...)>;       \
   if constexpr (std::is_signed<Integral>{} && N < 0 && I) {                    \
     switch (i) {                                                               \
       case I: return PETRA_RECURSIVE_SWITCH_TABLE_RETURNS();                   \
@@ -22,16 +27,26 @@ namespace petra {
       case I: return PETRA_RECURSIVE_SWITCH_TABLE_RETURNS();                   \
       default: return apply<I + 1>(i, std::forward<Args>(args)...);            \
     }                                                                          \
-  } else {                                                                     \
-    return callable(std::integral_constant<Integral, N>{},                     \
-                    std::forward<Args>(args)...);                              \
+  } else if constexpr (ErrorCallback{} || !std::is_same<Result, void>{}) {     \
+    return callable(InvalidInputError{}, std::forward<Args>(args)...);         \
   }
 
 #define PETRA_NOEXCEPT_FUNCTION_BODY(...)                                      \
   noexcept(noexcept(__VA_ARGS__)) { return __VA_ARGS__; }
 
+  // Utility for error handling
+  template<typename T, auto Size>
+  static constexpr bool invalid_input() {
+    if constexpr (Constant<T>()) {
+      if constexpr (std::is_integral<decltype(T::value)>{}) {
+        return T::value >= Size;
+      }
+    }
+    return true;
+  }
+
   // A specialization of SwitchTable for a sequential set of integers
-  template<typename F, auto N>
+  template<typename F, auto N, typename ErrorCallback = std::true_type>
   struct SequentialTable {
     using Integral = decltype(N);
     F callable;
@@ -59,9 +74,10 @@ namespace petra {
         PETRA_NOEXCEPT_FUNCTION_BODY(apply<0>(i, std::forward<Args>(args)...));
   };
 
-  template<auto N, typename F>
+  template<auto N, typename F, bool E = true>
   constexpr decltype(auto) make_sequential_table(F&& f)
-      PETRA_NOEXCEPT_FUNCTION_BODY(SequentialTable<F, N>{std::forward<F>(f)});
+      PETRA_NOEXCEPT_FUNCTION_BODY(SequentialTable<F, N, std::bool_constant<E>>{
+          std::forward<F>(f)});
 
 #undef PETRA_RECURSIVE_SWITCH_TABLE_RETURNS
 #undef PETRA_NOEXCEPT_FUNCTION_BODY

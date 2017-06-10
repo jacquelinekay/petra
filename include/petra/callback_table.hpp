@@ -46,12 +46,15 @@ namespace petra {
 
     static constexpr auto callback_map = [](auto&& index, auto&& c, auto&& e,
                                             auto&&... args) {
-      constexpr std::size_t I = std::decay_t<decltype(index)>::value;
-      if constexpr (I < size) {
+      using T = std::decay_t<decltype(index)>;
+      if constexpr (invalid_input<T, size>()) {
+        if constexpr (!std::is_same<ErrorCallback, void*>{}) {
+          return e(args...);
+        }
+      } else {
+        constexpr std::size_t I = T::value;
         static_assert(index_map[I] < std::tuple_size<Callbacks>{});
         return std::get<index_map[I]>(c)(args...);
-      } else if constexpr (!std::is_same<ErrorCallback, void*>{}) {
-        return e(args...);
       }
     };
 

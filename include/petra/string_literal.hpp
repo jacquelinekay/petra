@@ -17,15 +17,16 @@
 namespace petra {
 
   template<typename T, T... Pack>
-  struct string_literal {
+  class string_literal {
+    static constexpr char data[sizeof...(Pack) + 1] = {Pack..., '\0'};
+
+  public:
     using value_type = const char*;
-    static constexpr const char* value() { return data; };
+    static constexpr const char* value = data;
+    static constexpr const char* get_value() { return value; };
 
     static constexpr auto size() { return sizeof...(Pack); };
     static constexpr auto char_at(unsigned i) { return data[i]; };
-
-  private:
-    static constexpr char data[sizeof...(Pack) + 1] = {Pack..., '\0'};
   };
 
   template<typename T, T... P>
@@ -68,8 +69,8 @@ namespace petra {
 #define PETRA_STRING_LITERAL(Value)                                            \
   []() {                                                                       \
     struct tmp {                                                               \
-      static constexpr decltype(auto) value() { return Value; }                \
-      static constexpr auto char_at(unsigned i) { return value()[i]; };        \
+      static constexpr const char* value = Value;                              \
+      static constexpr auto char_at(unsigned i) { return value[i]; };          \
     };                                                                         \
     return petra::detail::from_string_literal(                                 \
         tmp{}, std::make_index_sequence<sizeof(Value)>{});                     \

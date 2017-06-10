@@ -18,6 +18,7 @@ struct test {
     ++results[N];
     PETRA_ASSERT(results[N] == 1);
   }
+  void operator()(petra::InvalidInputError&&) noexcept { PETRA_ASSERT(false); }
 
   std::array<std::size_t, Size> results = {{0}};
 };
@@ -32,7 +33,12 @@ int main() {
 
   {
     constexpr auto test_with_error = [](auto&& i) noexcept {
-      return std::decay_t<decltype(i)>::value;
+      using T = decltype(i);
+      if constexpr (petra::utilities::is_error_type<T>()) {
+        return Size;
+      } else {
+        return std::decay_t<T>::value;
+      }
     };
     auto table = petra::make_sequential_table<Size>(test_with_error);
 
@@ -47,10 +53,12 @@ int main() {
     // Try with a throwing callback
     auto test_with_exception = [](auto&& i) {
       using T = std::decay_t<decltype(i)>;
-      if constexpr (T::value == Size) {
+      if constexpr (petra::utilities::is_error_type<T>()) {
         throw std::runtime_error("Invalid input detected");
+        return Size;
+      } else {
+        return T::value;
       }
-      return T::value;
     };
     auto table = petra::make_sequential_table<Size>(test_with_exception);
     static_assert(!noexcept(table(std::declval<std::size_t>())));

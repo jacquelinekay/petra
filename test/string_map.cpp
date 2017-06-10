@@ -26,9 +26,13 @@ int main() {
 
     auto string_hash = petra::make_string_map(
         [&results](auto&& key) noexcept {
-          std::string key_s(key.value());
-          PETRA_ASSERT(results.count(key_s) == 1);
-          ++results[key_s];
+          if constexpr (petra::utilities::is_error_type<decltype(key)>()) {
+            PETRA_ASSERT(false);
+          } else {
+            std::string key_s(key.get_value());
+            PETRA_ASSERT(results.count(key_s) == 1);
+            ++results[key_s];
+          }
         },
         "asdf"_s, "qwerty"_s, "quux"_s, "int"_s, "arguments"_s, "foobar"_s,
         "abcd"_s, "badc"_s, "foo"_s, "oof"_s);
@@ -42,11 +46,9 @@ int main() {
 
   {
     auto string_hash = petra::make_string_map(
-        [](auto&&) {
-          throw std::runtime_error("Rawr! I'm angry!");
-        },
-        "asdf"_s, "qwerty"_s, "quux"_s, "int"_s, "arguments"_s, "foobar"_s,
-        "abcd"_s, "badc"_s, "foo"_s, "oof"_s);
+        [](auto&&) { throw std::runtime_error("Rawr! I'm angry!"); }, "asdf"_s,
+        "qwerty"_s, "quux"_s, "int"_s, "arguments"_s, "foobar"_s, "abcd"_s,
+        "badc"_s, "foo"_s, "oof"_s);
 
     static_assert(!noexcept(string_hash(std::declval<const char*>())));
   }
