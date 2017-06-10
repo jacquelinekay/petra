@@ -11,7 +11,7 @@
 using namespace petra::literals;
 
 template<typename T>
-using printable_t = decltype(std::cout << std::declval<T>());
+using printable_t = decltype(std::declval<std::ostream&> << std::declval<T>());
 
 template<typename T>
 static constexpr bool Printable() {
