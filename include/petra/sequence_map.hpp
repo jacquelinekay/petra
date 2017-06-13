@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <cmath>
 #include <utility>
 
 #include "petra/sequential_table.hpp"
@@ -20,55 +21,69 @@ namespace petra {
    * */
   template<typename F, auto SeqSize, decltype(SeqSize) UpperBound>
   struct SequenceMap {
-    static_assert(SeqSize > 0, "Cannot instantiate a sequence map of size zero.");
+    static_assert(SeqSize > 0, "Cannot create a sequence map of size zero.");
+    static_assert(UpperBound > 0, "Cannot create a sequence map with values bounded at 0.");
 
-    constexpr SequenceMap(F&& f) noexcept : callback(f) {}
+    constexpr SequenceMap(F&& f) : callback(f) {}
 
     using Integral = decltype(SeqSize);
     static constexpr Integral Size = utilities::abs(SeqSize);
     using Array = std::array<Integral, Size>;
 
+    static constexpr Integral TotalSize = utilities::pow(UpperBound, Size);
+
     template<typename... Args>
     constexpr auto operator()(const Array& input, Args&&... args)
-        PETRA_NOEXCEPT_FUNCTION_BODY(
-            seq_map(utilities::at(input, static_cast<Integral>(0)), input,
-                    callback, std::forward<Args>(args)...));
+        PETRA_NOEXCEPT_FUNCTION_BODY(table(accumulate_sequence(input), callback,
+                                           std::forward<Args>(args)...));
 
   private:
-    template<Integral CurrentIndex, Integral... Sequence>
-    struct helper {
-      template<Integral I, typename... Args>
-      constexpr auto operator()(std::integral_constant<Integral, I>&&,
-                                const Array& input, F& callback,
-                                Args&&... args) const
-          noexcept(noexcept(
-              callback(std::integer_sequence<Integral, Sequence..., I>{},
-                       std::forward<Args>(args)...))) {
-        if constexpr (Size == 0) {
-          return callback(std::integer_sequence<Integral>{},
-                          std::forward<Args>(args)...);
-        } else if constexpr (CurrentIndex == Size - 1) {
-          static_assert(sizeof...(Sequence) + 1 == Size);
-          return callback(std::integer_sequence<Integral, Sequence..., I>{},
-                          std::forward<Args>(args)...);
-        } else {
-          static_assert(CurrentIndex < Size - 1);
-          constexpr Integral NextIndex = CurrentIndex + static_cast<Integral>(1);
-          return make_sequential_table<UpperBound>(
-              helper<NextIndex, Sequence..., I>{})(
-              input[NextIndex], input, callback, std::forward<Args>(args)...);
-        }
+    // TODO Overflow checks
+    static constexpr auto accumulate_sequence(const Array& input) noexcept {
+      Integral total = 0;
+      for (std::size_t i = 0; i < input.size(); ++i) {
+        total += input[i] * utilities::pow(UpperBound, i);
       }
+      return total;
+    }
 
-      template<typename... Args>
-      constexpr auto operator()(InvalidInputError&& e, const Array&,
-                                F& callback, Args&&... args) const
-          PETRA_NOEXCEPT_FUNCTION_BODY(callback(
-              std::forward<InvalidInputError>(e), std::forward<Args>(args)...));
+#define PETRA_BUILD_SEQUENCE_RETURNS() \
+  cb(std::integer_sequence<Integral, Sequence...>{}, std::forward<Args>(args)...)
+
+    template<Integral Key, Integral Index, Integral... Sequence,
+             typename... Args>
+    static constexpr auto build_sequence(F& cb, Args&&... args) noexcept(
+        noexcept(PETRA_BUILD_SEQUENCE_RETURNS())) {
+      if constexpr (Index == Size) {
+        static_assert(sizeof...(Sequence) == Size);
+        return PETRA_BUILD_SEQUENCE_RETURNS();
+      } else {
+        constexpr Integral Base = utilities::pow(UpperBound, Index);
+        static_assert(Base != 0);
+        constexpr Integral Next = (Key / Base) % UpperBound;
+        return build_sequence<Key, Index + static_cast<Integral>(1), Next,
+                              Sequence...>(cb, std::forward<Args>(args)...);
+      }
+    }
+
+
+#define PETRA_MAP_TO_SEQUENCE_RETURNS(K)                                        \
+  SequenceMap::build_sequence<K, static_cast<Integral>(0)>(                  \
+      cb, std::forward<std::decay_t<decltype(args)>>(args)...)
+
+    static constexpr auto map_to_seq = [](
+        auto&& i, auto& cb,
+        auto&&... args) noexcept(noexcept(PETRA_MAP_TO_SEQUENCE_RETURNS(0))) {
+      using T = std::decay_t<decltype(i)>;
+      if constexpr (utilities::is_error_type<T>()) {
+        return cb(std::forward<T>(i),
+                  std::forward<std::decay_t<decltype(args)>>(args)...);
+      } else {
+        return PETRA_MAP_TO_SEQUENCE_RETURNS(T::value);
+      }
     };
 
-    static constexpr auto seq_map =
-        make_sequential_table<UpperBound>(helper<static_cast<Integral>(0)>{});
+    static constexpr auto table = make_sequential_table<TotalSize>(map_to_seq);
 
     F callback;
   };
@@ -78,6 +93,8 @@ namespace petra {
       PETRA_NOEXCEPT_FUNCTION_BODY(
           SequenceMap<F, SeqSize, UpperBound>(std::forward<F>(f)));
 
+#undef PETRA_BUILD_SEQUENCE_RETURNS
 #undef PETRA_NOEXCEPT_FUNCTION_BODY
+#undef PETRA_MAP_TO_SEQUENCE_RETURNS
 
 }  // namespace petra

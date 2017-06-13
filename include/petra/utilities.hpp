@@ -101,6 +101,15 @@ namespace petra {
       return i;
     }
 
+    template<typename T, typename = std::enable_if_t<std::is_integral<T>{}>>
+    static constexpr auto pow(T base, T exp) {
+      T result = 1;
+      while (exp-- > 0){
+        result *= base;
+      }
+      return result;
+    }
+
     template<typename T, auto Size>
     const T& at(const std::array<T, Size>& array, std::size_t pos) noexcept {
       return array[pos];
