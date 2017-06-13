@@ -16,6 +16,7 @@ struct callback {
   template<std::size_t... Sequence, std::size_t... Indices>
   auto operator()(std::index_sequence<Sequence...>&& seq, const Array& input,
                   std::index_sequence<Indices...>&&) noexcept {
+    static_assert(sizeof...(Sequence) == sequence_size);
     (PETRA_ASSERT(petra::access_sequence<Indices>(seq) == input[Indices]), ...);
   }
 

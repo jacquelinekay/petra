@@ -13,7 +13,8 @@ static constexpr std::size_t upper_bound = 4;
 struct callback {
   template<std::size_t... I>
   auto operator()(std::integer_sequence<std::size_t, I...>&&) {
-    (std::cout << ... << I);
+    // TODO ???
+    (void)(std::cout << ... << I);
     std::cout << "\n";
   }
 
