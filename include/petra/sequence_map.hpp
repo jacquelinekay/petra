@@ -47,21 +47,24 @@ namespace petra {
       return total;
     }
 
-#define PETRA_BUILD_SEQUENCE_RETURNS() \
-  cb(std::integer_sequence<Integral, Sequence...>{}, std::forward<Args>(args)...)
+    static constexpr auto sequence_from_key(Integral Key, Integral Index) {
+      Integral Base = utilities::pow(UpperBound, Index);
+      return (Key / Base) % UpperBound;
+    }
+
+// TODO: noexcept specifier is a total hack
+#define PETRA_BUILD_SEQUENCE_RETURNS(...) \
+  cb(__VA_ARGS__, std::forward<Args>(args)...)
 
     template<Integral Key, Integral Index, Integral... Sequence,
              typename... Args>
     static constexpr auto build_sequence(F& cb, Args&&... args)
-    PETRA_NOEXCEPT_CHECK(PETRA_BUILD_SEQUENCE_RETURNS()) {
-      if constexpr (Index == SeqSize) {
-        static_assert(sizeof...(Sequence) == SeqSize);
-        return PETRA_BUILD_SEQUENCE_RETURNS();
+    PETRA_NOEXCEPT_CHECK(PETRA_BUILD_SEQUENCE_RETURNS(std::make_integer_sequence<Integral, Size>{})) {
+      if constexpr (Index == Size - 1) {
+        static_assert(sizeof...(Sequence) + 1 == Size);
+        return PETRA_BUILD_SEQUENCE_RETURNS(std::integer_sequence<Integral, sequence_from_key(Key, Index), Sequence...>{});
       } else {
-        constexpr Integral Base = utilities::pow(UpperBound, Index);
-        static_assert(Base != 0);
-        constexpr Integral Next = (Key / Base) % UpperBound;
-        return build_sequence<Key, Index + static_cast<Integral>(1), Next,
+        return build_sequence<Key, Index + static_cast<Integral>(1), sequence_from_key(Key, Index),
                               Sequence...>(cb, std::forward<Args>(args)...);
       }
     }
