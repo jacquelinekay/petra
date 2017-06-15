@@ -12,6 +12,27 @@ static constexpr std::size_t sequence_size = 3;
 static constexpr std::size_t upper_bound = 4;
 using Array = std::array<std::size_t, sequence_size>;
 
+// unit test utilities
+template<typename S>
+static void test_sequence_key_map(const Array& input, std::size_t expected_key) {
+  PETRA_ASSERT(S::accumulate_sequence(input) == expected_key);
+  for (std::size_t i = 0; i < sequence_size; ++i) {
+    PETRA_ASSERT(input[i] == S::sequence_from_key(expected_key, i));
+  }
+}
+
+template<typename S>
+static void sequence_key_test() {
+  std::array<Array, S::TotalSize> test_arrays;
+
+  for (std::size_t i = 0; i < S::TotalSize; ++i) {
+    for (std::size_t j = 0; j < sequence_size; ++j) {
+      test_arrays[i][j] = S::sequence_from_key(i, j);
+    }
+    test_sequence_key_map<S>(test_arrays[i], i);
+  }
+}
+
 struct callback {
   template<std::size_t... Sequence, std::size_t... Indices>
   auto operator()(std::index_sequence<Sequence...>&& seq, const Array& input,
@@ -39,7 +60,9 @@ int main() {
     auto m = petra::make_sequence_map<sequence_size, upper_bound>(callback{});
     static_assert(
         noexcept(m(test, test, std::make_index_sequence<sequence_size>{})));
+    sequence_key_test<decltype(m)>();
     m(test, test, std::make_index_sequence<sequence_size>{});
+
     // Error case
     test[0] = 4;
     m(test, test, std::make_index_sequence<sequence_size>{});

@@ -36,12 +36,14 @@ namespace petra {
     constexpr auto operator()(const Array& input, Args&&... args)
         PETRA_NOEXCEPT_FUNCTION_BODY(table(accumulate_sequence(input), callback,
                                            std::forward<Args>(args)...));
-
-  private:
     // TODO Overflow checks
     static constexpr auto accumulate_sequence(const Array& input) noexcept {
       Integral total = 0;
       for (std::size_t i = 0; i < input.size(); ++i) {
+        // hack
+        if (input[i] >= UpperBound) {
+          return TotalSize;
+        }
         total += input[i] * utilities::pow(UpperBound, i);
       }
       return total;
@@ -52,6 +54,8 @@ namespace petra {
       return (Key / Base) % UpperBound;
     }
 
+  private:
+
 // TODO: noexcept specifier is a total hack
 #define PETRA_BUILD_SEQUENCE_RETURNS(...) \
   cb(__VA_ARGS__, std::forward<Args>(args)...)
@@ -59,13 +63,15 @@ namespace petra {
     template<Integral Key, Integral Index, Integral... Sequence,
              typename... Args>
     static constexpr auto build_sequence(F& cb, Args&&... args)
-    noexcept(noexcept(PETRA_BUILD_SEQUENCE_RETURNS(std::make_integer_sequence<Integral, Size>{}))) {
+    noexcept(noexcept(PETRA_BUILD_SEQUENCE_RETURNS(
+            std::make_integer_sequence<Integral, Size>{}))) {
       if constexpr (Index == Size - 1) {
         static_assert(sizeof...(Sequence) + 1 == Size);
-        return PETRA_BUILD_SEQUENCE_RETURNS(std::integer_sequence<Integral, sequence_from_key(Key, Index), Sequence...>{});
+        return PETRA_BUILD_SEQUENCE_RETURNS(
+            std::integer_sequence<Integral, Sequence..., sequence_from_key(Key, Index)>{});
       } else {
-        return build_sequence<Key, Index + static_cast<Integral>(1), sequence_from_key(Key, Index),
-                              Sequence...>(cb, std::forward<Args>(args)...);
+        return build_sequence<Key, Index + static_cast<Integral>(1), Sequence...,
+               sequence_from_key(Key, Index)>(cb, std::forward<Args>(args)...);
       }
     }
 
