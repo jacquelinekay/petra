@@ -9,9 +9,18 @@
 
 #include "petra/utilities/fold.hpp"
 
+#ifdef PETRA_ENABLE_CPP14
+#define PETRA_AUTO(Typename) typename Typename, Typename
+#else
+#define PETRA_AUTO(Typename) auto
+#endif  // PETRA_ENABLE_CPP14
+
 namespace petra {
 
   struct InvalidInputError {};
+
+  template<bool B>
+  using bool_constant = std::integral_constant<bool, B>;
 
   namespace utilities {
 
@@ -27,7 +36,7 @@ namespace petra {
       return *str ? 1 + length(str + 1) : 0;
     }
 
-    // Hm
+#ifndef PETRA_ENABLE_CPP14
     template<size_t Max, typename Cur, typename... Strings>
     constexpr auto
     max_string_length_recursive(const std::tuple<Cur, Strings...>&) {
@@ -54,6 +63,7 @@ namespace petra {
     constexpr auto max_string_length(const Strings&... strs) {
       return max_string_length_recursive<0>(std::make_tuple(strs...));
     }
+#endif  // PETRA_ENABLE_CPP14
 
     // from
     // http://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
@@ -72,6 +82,7 @@ namespace petra {
       return std::make_tuple(Sequence...);
     }
 
+#ifndef PETRA_ENABLE_CPP14
     template<typename F, typename T, std::size_t... I>
     constexpr auto times_helper(F&& f, T&& initial, std::index_sequence<I...>) {
       return fold_left([f](auto t, auto) { return f(t); }, initial, I...);
@@ -85,6 +96,7 @@ namespace petra {
         return times_helper(f, initial, std::make_index_sequence<I>{});
       }
     }
+#endif  // PETRA_ENABLE_CPP14
 
     template<typename T>
     constexpr bool is_error_type() {
@@ -93,7 +105,7 @@ namespace petra {
 
     template<typename T>
     static T constexpr abs(T i) {
-      if constexpr (std::is_signed<T>{}) {
+      if (std::is_signed<T>{}) {
         if (i < 0) {
           return i * -1;
         }
@@ -110,7 +122,7 @@ namespace petra {
       return result;
     }
 
-    template<typename T, auto Size>
+    template<typename T, std::size_t Size>
     const T& at(const std::array<T, Size>& array, std::size_t pos) noexcept {
       return array[pos];
     }

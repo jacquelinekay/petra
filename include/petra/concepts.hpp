@@ -9,7 +9,15 @@
 
 namespace petra {
 
-  template<template<typename...> typename Op, typename... Args>
+#ifdef PETRA_ENABLE_CPP14
+  template<typename...T>
+  using void_t = std::experimental::void_t<T...>;
+#else
+  template<typename...T>
+  using void_t = std::void_t<T...>;
+#endif
+
+  template<template<typename...> class Op, typename... Args>
   using is_detected = std::experimental::is_detected<Op, Args...>;
 
   template<typename T, typename S>
@@ -34,7 +42,7 @@ namespace petra {
     return is_detected<tuple_access_t, std::decay_t<T>>{};
   }
   template<typename T>
-  using pair_access_t = std::void_t<decltype(std::declval<T>().first),
+  using pair_access_t = void_t<decltype(std::declval<T>().first),
                                     decltype(std::declval<T>().second)>;
 
   template<typename T>
@@ -48,7 +56,7 @@ namespace petra {
 
   template<typename T>
   static constexpr bool Constant() {
-    if constexpr (is_detected<data_accessor_t, T>{}) {
+    if (is_detected<data_accessor_t, T>{}) {
       return Comparable<T, decltype(T::value)>();
     }
     return false;

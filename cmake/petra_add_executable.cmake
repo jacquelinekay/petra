@@ -4,12 +4,15 @@
 
 function(petra_add_executable executable_name filename)
     add_executable(${executable_name} ${filename})
-    target_compile_options(${executable_name} PUBLIC "-std=c++1z")
+    target_compile_options(${executable_name} PUBLIC "-std=${PETRA_CXX_STD}")
     target_include_directories(${executable_name} PUBLIC ${CMAKE_SOURCE_DIR}/include)
+    if(PETRA_USE_CPP14)
+      target_include_directories(${executable_name} PUBLIC ${Hana_INCLUDE_DIR})
+    endif()
 
     target_compile_options(${executable_name} PUBLIC "-Wall;-Wextra;-Werror")
 
-    if (PETRA_USE_UDL)
+    if(PETRA_USE_UDL)
         target_compile_options(${executable_name} PUBLIC "-DPETRA_USE_UDL")
         if (NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
             target_compile_options(${executable_name} PUBLIC
