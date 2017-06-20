@@ -81,11 +81,5 @@ int main() {
     run_test<SSize>(petra::make_sequential_table<SSize>(test<SSize>{}));
   }
 
-  // Negative sequence
-  {
-    constexpr int SSize = -10;
-    run_test<SSize>(petra::make_sequential_table<SSize>(test<SSize>{}));
-  }
-
   return 0;
 }

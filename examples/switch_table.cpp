@@ -25,5 +25,6 @@ int main(int argc, char** argv) {
 
   auto switch_table =
       petra::make_switch_table<std::size_t, 100, 42, 8, 0>(printer{});
+
   switch_table(index);
 }

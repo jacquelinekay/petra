@@ -7,6 +7,10 @@
 #include <iostream>
 #include <tuple>
 
+#ifdef PETRA_ENABLE_CPP14
+#include <boost/hana/if.hpp>
+#endif  // PETRA_ENABLE_CPP14
+
 namespace petra {
 
 #ifdef PETRA_ENABLE_CPP14
@@ -56,10 +60,22 @@ namespace petra {
 
   template<typename T>
   static constexpr bool Constant() {
-    if (is_detected<data_accessor_t, T>{}) {
+#ifdef PETRA_ENABLE_CPP14
+    namespace hana = boost::hana;
+    return hana::if_(is_detected<data_accessor_t, T>{},
+      []() {
+        return Comparable<T, decltype(T::value)>();
+      },
+      []() {
+        return false;
+      }
+    );
+#else
+    if constexpr (is_detected<data_accessor_t, T>{}) {
       return Comparable<T, decltype(T::value)>();
     }
     return false;
+#endif
   }
 
 }  // namespace petra

@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
     return 255;
   }
 
-  constexpr auto get_result = petra::make_sequential_table<10>([](auto&& i) {
+  constexpr auto get_result = petra::make_sequential_table<10ul>([](auto&& i) {
     using T = decltype(i);
     if constexpr (petra::utilities::is_error_type<T>()) {
       throw std::runtime_error("Value exceeded maximum array size.");

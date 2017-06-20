@@ -30,13 +30,15 @@ namespace petra {
   template<std::size_t I, typename T, T... Sequence>
   static constexpr T
   access_sequence(const std::integer_sequence<T, Sequence...>& seq) noexcept {
+    static_assert(I < sizeof...(Sequence), "Index exceeds size of sequence");
 #ifdef PETRA_ENABLE_CPP14
     namespace hana = boost::hana;
     (void)seq;
     return hana::at_c<I>(hana::tuple_c<T, Sequence...>);
+    // return hana::at<I>(hana::make_tuple(Sequence...));
 #else
     return access_sequence_helper<I, T>(
-        seq, std::make_integer_sequence<T, sizeof...(Sequence)>{});
+        seq, std::make_integer_sequence<std::size_t, sizeof...(Sequence)>{});
 #endif  // PETRA_ENABLE_CPP14
   }
 

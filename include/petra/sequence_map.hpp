@@ -19,14 +19,13 @@ namespace petra {
   /* Given a sequence size known at compile time, map a std::array to a
    * std::integer_sequence
    * */
-  template<typename F, auto SeqSize, decltype(SeqSize) UpperBound>
+  template<typename F, typename Integral, Integral SeqSize, decltype(SeqSize) UpperBound>
   struct SequenceMap {
     static_assert(SeqSize > 0, "Cannot create a sequence map of size zero.");
     static_assert(UpperBound > 0, "Cannot create a sequence map with values bounded at 0.");
 
     constexpr SequenceMap(F&& f) : callback(f) {}
 
-    using Integral = decltype(SeqSize);
     static constexpr Integral Size = utilities::abs(SeqSize);
     using Array = std::array<Integral, Size>;
 
@@ -97,10 +96,17 @@ namespace petra {
     F callback;
   };
 
+  template<typename Integral, Integral SeqSize, Integral UpperBound, typename F>
+  constexpr decltype(auto) make_sequence_map(F&& f)
+      PETRA_NOEXCEPT_FUNCTION_BODY(
+          SequenceMap<F, Integral, SeqSize, UpperBound>(std::forward<F>(f)));
+
+#ifndef PETRA_ENABLE_CPP14
   template<auto SeqSize, decltype(SeqSize) UpperBound, typename F>
   constexpr decltype(auto) make_sequence_map(F&& f)
       PETRA_NOEXCEPT_FUNCTION_BODY(
-          SequenceMap<F, SeqSize, UpperBound>(std::forward<F>(f)));
+          SequenceMap<F, decltype(SeqSize), SeqSize, UpperBound>(std::forward<F>(f)));
+#endif  //PETRA_ENABLE_CPP14 
 
 #undef PETRA_BUILD_SEQUENCE_RETURNS
 #undef PETRA_NOEXCEPT_FUNCTION_BODY
