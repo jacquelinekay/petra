@@ -5,9 +5,13 @@
 #include <cassert>
 #include <iostream>
 
-template<auto N>
+static auto fill_array(petra::InvalidInputError&&) {
+  throw std::runtime_error("Value exceeded maximum array size.");
+}
+
+template<typename Integral, Integral N>
 static constexpr auto
-fill_array(std::integral_constant<decltype(N), N>&&) noexcept {
+fill_array(std::integral_constant<Integral, N>&&) {
   std::array<int, N> buckets;
   /* ... */
   (void)buckets;
@@ -25,16 +29,10 @@ int main(int argc, char** argv) {
     return 255;
   }
 
-  constexpr auto get_result = petra::make_sequential_table<10ul>([](auto&& i) {
-    using T = decltype(i);
-    if constexpr (petra::utilities::is_error_type<T>()) {
-      throw std::runtime_error("Value exceeded maximum array size.");
-    } else {
-      // Increase the input type by one.
-      return fill_array(
-          std::integral_constant<std::size_t, std::decay_t<T>::value>{});
-    }
-  });
+  auto get_result = petra::make_sequential_table<std::size_t, 10>(
+    [](auto&& i) {
+      return fill_array(std::forward<std::decay_t<decltype(i)>>(i));
+    });
 
   get_result(x);
 

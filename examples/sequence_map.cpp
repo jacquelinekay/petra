@@ -7,15 +7,31 @@
 
 #include <iostream>
 
+#ifdef PETRA_ENABLE_CPP14
+#include <boost/hana/for_each.hpp>
+#include <boost/hana/tuple.hpp>
+
+namespace hana = boost::hana;
+#endif  // PETRA_ENABLE_CPP14
+
 static constexpr std::size_t sequence_size = 3;
 static constexpr std::size_t upper_bound = 4;
 
 struct callback {
   template<std::size_t... I>
   auto operator()(std::integer_sequence<std::size_t, I...>&&) {
+#ifdef PETRA_ENABLE_CPP14
+    hana::for_each(hana::make_tuple(I...),
+      [](auto x) {
+        std::cout << x;
+      }
+    );
+    std::cout << "\n";
+#else
     // TODO ???
     (void)(std::cout << ... << I);
     std::cout << "\n";
+#endif  // PETRA_ENABLE_CPP14
   }
 
   auto operator()(petra::InvalidInputError&&) {
@@ -34,7 +50,11 @@ int main(int argc, char** argv) {
 
   for (int i = 1; i < argc; ++i) { test[i - 1] = std::stoul(argv[i]); }
 
+#ifdef PETRA_ENABLE_CPP14
+  auto m = petra::make_sequence_map<std::size_t, sequence_size, upper_bound>(callback{});
+#else
   auto m = petra::make_sequence_map<sequence_size, upper_bound>(callback{});
+#endif
   m(test);
 
   return 0;

@@ -42,6 +42,10 @@ namespace petra {
   struct SequentialTable {
     static_assert(N > 0,
         "Sorry, SequentialTable only supports positive sequences.");
+
+    template<Integral I>
+    using int_c = std::integral_constant<Integral, I>;
+
     F callable;
 
     constexpr SequentialTable(F&& f) noexcept : callable(f) {}
@@ -50,32 +54,32 @@ namespace petra {
     constexpr auto apply(Iterations&&, Integral, Args&&...);
 
     template<typename... Args>
-    constexpr auto apply(std::integral_constant<Integral, N>&&, Integral, Args&&... args)
+    constexpr auto apply(int_c<N>&&, Integral, Args&&... args)
     PETRA_NOEXCEPT_FUNCTION_BODY(callable(InvalidInputError{}, std::forward<Args>(args)...));
 
     template<typename... Args>
-    constexpr auto apply(std::integral_constant<Integral, N>&&, Integral, Args&&... args) const
+    constexpr auto apply(int_c<N>&&, Integral, Args&&... args) const
     PETRA_NOEXCEPT_FUNCTION_BODY(callable(InvalidInputError{}, std::forward<Args>(args)...));
 
     template<Integral I, typename... Args>
-    constexpr auto apply(std::integral_constant<Integral, I>&&, Integral i, Args&&... args) noexcept(
+    constexpr auto apply(int_c<I>&&, Integral i, Args&&... args) noexcept(
         noexcept(PETRA_RECURSIVE_SWITCH_TABLE_RETURNS())) {
       PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY()
     }
 
     template<Integral I, typename... Args>
-    constexpr auto apply(std::integral_constant<Integral, I>&&, Integral i, Args&&... args) const
+    constexpr auto apply(int_c<I>&&, Integral i, Args&&... args) const
         noexcept(noexcept(PETRA_RECURSIVE_SWITCH_TABLE_RETURNS())) {
       PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY()
     }
 
     template<typename... Args>
     constexpr auto operator()(Integral i, Args&&... args) const
-        PETRA_NOEXCEPT_FUNCTION_BODY(apply(std::integral_constant<Integral, 0>{}, i, std::forward<Args>(args)...));
+        PETRA_NOEXCEPT_FUNCTION_BODY(apply(int_c<0>{}, i, std::forward<Args>(args)...));
 
     template<typename... Args>
     constexpr auto operator()(Integral i, Args&&... args)
-        PETRA_NOEXCEPT_FUNCTION_BODY(apply(std::integral_constant<Integral, 0>{}, i, std::forward<Args>(args)...));
+        PETRA_NOEXCEPT_FUNCTION_BODY(apply(int_c<0>{}, i, std::forward<Args>(args)...));
   };
 
 #ifndef PETRA_ENABLE_CPP14

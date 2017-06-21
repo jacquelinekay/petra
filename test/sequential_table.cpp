@@ -9,13 +9,8 @@
 #include <array>
 #include <iostream>
 
-// constexpr std::size_t Size = 10;
-namespace petra {
-}
-
-template<auto Size>
+template<typename Integral, Integral Size>
 struct test {
-  using Integral = decltype(Size);
   template<Integral N>
   void operator()(std::integral_constant<Integral, N>&&) {
     std::cout << N << std::endl;
@@ -27,19 +22,15 @@ struct test {
   std::array<std::size_t, petra::utilities::abs(Size)> results = {{0}};
 };
 
-template<auto Size, typename S>
+template<typename Integral, Integral Size, typename S>
 void run_test(S&& table) {
-  if constexpr (std::is_signed<decltype(Size)>{} && Size < 0) {
-    for (decltype(Size) i = 0; i > Size; --i) { table(i); }
-  } else {
-    for (decltype(Size) i = 0; i < Size; ++i) { table(i); }
-  }
+  for (decltype(Size) i = 0; i < Size; ++i) { table(i); }
 }
 
 int main() {
   constexpr std::size_t USize = 10ul;
   {
-    run_test<USize>(petra::make_sequential_table<USize>(test<USize>{}));
+    run_test<std::size_t, USize>(petra::make_sequential_table<USize>(test<std::size_t, USize>{}));
   }
 
   {
@@ -55,7 +46,7 @@ int main() {
 
     static_assert(noexcept(table(std::declval<std::size_t>())));
 
-    run_test<USize>(table);
+    run_test<std::size_t, USize>(table);
     // Try with an integer not in the set
     PETRA_ASSERT(table(20) == USize);
   }
@@ -78,7 +69,7 @@ int main() {
   // Unsigned type
   {
     constexpr int SSize = 10;
-    run_test<SSize>(petra::make_sequential_table<SSize>(test<SSize>{}));
+    run_test<int, SSize>(petra::make_sequential_table<SSize>(test<std::size_t, SSize>{}));
   }
 
   return 0;

@@ -41,25 +41,28 @@ namespace petra {
 
     using IndexSeq = std::integer_sequence<Integral, Sequence...>;
 
+    template<std::size_t I>
+    using size_c = std::integral_constant<std::size_t, I>;
+
     template<typename Iterations, typename... Args>
     constexpr auto apply(Iterations&&, Integral, Args&&...);
 
     template<typename... Args>
-    constexpr auto apply(std::integral_constant<std::size_t, sizeof...(Sequence)>&&, Integral, Args&&... args)
+    constexpr auto apply(size_c<sizeof...(Sequence)>&&, Integral, Args&&... args)
     PETRA_NOEXCEPT_FUNCTION_BODY(callable(InvalidInputError{}, std::forward<Args>(args)...));
 
     template<typename... Args>
-    constexpr auto apply(std::integral_constant<std::size_t, sizeof...(Sequence)>&&, Integral, Args&&... args) const
+    constexpr auto apply(size_c<sizeof...(Sequence)>&&, Integral, Args&&... args) const
     PETRA_NOEXCEPT_FUNCTION_BODY(callable(InvalidInputError{}, std::forward<Args>(args)...));
 
     template<std::size_t Iterations, typename... Args>
-    constexpr auto apply(std::integral_constant<std::size_t, Iterations>&&, Integral i, Args&&... args) noexcept(
+    constexpr auto apply(size_c<Iterations>&&, Integral i, Args&&... args) noexcept(
         noexcept(PETRA_RECURSIVE_SWITCH_TABLE_RETURNS())) {
       PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY()
     }
 
     template<std::size_t Iterations, typename... Args>
-    constexpr auto apply(std::integral_constant<std::size_t, Iterations>&&, Integral i, Args&&... args) const
+    constexpr auto apply(size_c<Iterations>&&, Integral i, Args&&... args) const
         noexcept(noexcept(PETRA_RECURSIVE_SWITCH_TABLE_RETURNS())) {
       PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY()
     }
@@ -67,12 +70,12 @@ namespace petra {
     template<typename... Args>
     constexpr auto operator()(Integral i, Args&&... args)
         PETRA_NOEXCEPT_FUNCTION_BODY(
-            this->apply(std::integral_constant<std::size_t, 0>{}, i, std::forward<Args>(args)...));
+            this->apply(size_c<0>{}, i, std::forward<Args>(args)...));
 
     template<typename... Args>
     constexpr auto operator()(Integral i, Args&&... args) const
         PETRA_NOEXCEPT_FUNCTION_BODY(
-            this->apply(std::integral_constant<std::size_t, 0>{}, i, std::forward<Args>(args)...));
+            this->apply(size_c<0>{}, i, std::forward<Args>(args)...));
 
     F callable;
   };

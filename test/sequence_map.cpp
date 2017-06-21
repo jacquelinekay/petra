@@ -37,7 +37,8 @@ struct callback {
   template<std::size_t... Sequence, std::size_t... Indices>
   auto operator()(std::index_sequence<Sequence...>&& seq, const Array& input,
                   std::index_sequence<Indices...>&&) noexcept {
-    static_assert(sizeof...(Sequence) == sequence_size);
+    static_assert(sizeof...(Sequence) == sequence_size,
+        "Callback argument had incorrect sequence size.");
     (PETRA_ASSERT(petra::access_sequence<Indices>(seq) == input[Indices]), ...);
   }
 
@@ -59,7 +60,8 @@ int main() {
 
     auto m = petra::make_sequence_map<sequence_size, upper_bound>(callback{});
     static_assert(
-        noexcept(m(test, test, std::make_index_sequence<sequence_size>{})));
+        noexcept(m(test, test, std::make_index_sequence<sequence_size>{})),
+        "Noexcept test failed for sequence map.");
     sequence_key_test<decltype(m)>();
     m(test, test, std::make_index_sequence<sequence_size>{});
 
@@ -74,7 +76,8 @@ int main() {
     };
     auto m = petra::make_sequence_map<sequence_size, upper_bound>(
         callback_with_throw);
-    static_assert(!noexcept(m(std::declval<Array>())));
+    static_assert(!noexcept(m(std::declval<Array>())),
+        "Not-noexcept test failed for sequence map.");
   }
 
   return 0;
