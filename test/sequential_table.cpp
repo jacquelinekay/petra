@@ -66,8 +66,10 @@ int main() {
 #endif  // PETRA_ENABLE_CPP14
     auto table = petra::make_sequential_table<std::size_t, USize>(test_with_error);
 
+#ifndef PETRA_ENABLE_CPP14
     static_assert(noexcept(table(std::declval<std::size_t>())),
         "Noexcept correctness test failed for sequential_table.");
+#endif  // PETRA_ENABLE_CPP14
 
     run_test<std::size_t, USize>(table);
     // Try with an integer not in the set
@@ -97,8 +99,12 @@ int main() {
     };
 #endif  // PETRA_ENABLE_CPP14
     auto table = petra::make_sequential_table<std::size_t, USize>(test_with_exception);
+#ifndef PETRA_ENABLE_CPP14
     static_assert(!noexcept(table(std::declval<std::size_t>())),
         "Noexcept test failed for throwing callback in sequential_table.");
+#else
+    (void)table;
+#endif  // PETRA_ENABLE_CPP14
   }
 
   // Unsigned type

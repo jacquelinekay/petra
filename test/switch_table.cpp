@@ -42,14 +42,15 @@ struct test {
 
 template<typename S, size_t... I>
 void run_test(std::index_sequence<I...>, S&& table) {
-  static_assert(noexcept(table(std::declval<std::size_t>())),
-      "Noexcept correctness test failed!");
 #ifdef PETRA_ENABLE_CPP14
   hana::for_each(hana::make_tuple(I...),
       [&table](auto i) {
         table(i);
       });
 #else
+  static_assert(noexcept(table(std::declval<std::size_t>())),
+      "Noexcept correctness test failed!");
+
   (table(I), ...);
 #endif  // PETRA_ENABLE_CPP14
 }
@@ -103,8 +104,12 @@ int main() {
 #endif  // PETRA_ENABLE_CPP14
     auto table = petra::make_switch_table(test_with_exception, TestSet{});
 
+#ifndef PETRA_ENABLE_CPP14
     static_assert(!noexcept(table(std::declval<std::size_t>())),
         "Noexcept correctness test failed for throwing function.");
+#else
+    (void)table;
+#endif  // PETRA_ENABLE_CPP14
   }
   return 0;
 }
