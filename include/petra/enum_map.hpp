@@ -5,6 +5,7 @@
 #pragma once
 
 #include "petra/switch_table.hpp"
+#include "petra/utilities.hpp"
 
 namespace petra {
 
@@ -20,7 +21,11 @@ namespace petra {
     template<Enum E>
     using enum_constant = std::integral_constant<Enum, E>;
 
+#ifdef PETRA_ENABLE_CPP14
+    constexpr EnumMap(F&& f) : callback(f), cast_to_enum(forward_callbacks{}) {}
+#else
     constexpr EnumMap(F&& f) : callback(f) {}
+#endif  // PETRA_ENABLE_CPP14
 
     template<typename... Args>
     constexpr decltype(auto) operator()(Enum input, Args&&... args)
@@ -40,16 +45,26 @@ namespace petra {
               cb(std::forward<InvalidInputError>(input),
                  std::forward<Args>(args)...));
 
-      template<auto I, typename Callback, typename... Args>
+      template<PETRA_AUTO(In) I, typename Callback, typename... Args>
+#ifdef PETRA_ENABLE_CPP14
+      constexpr auto operator()(std::integral_constant<In, I>&&,
+#else
       constexpr auto operator()(std::integral_constant<decltype(I), I>&&,
+#endif  // PETRA_ENABLE_CPP14
                                 Callback& cb, Args&&... args) const
           PETRA_NOEXCEPT_FUNCTION_BODY(cb(enum_constant<static_cast<Enum>(I)>{},
                                           std::forward<Args>(args)...));
     };
 
+#ifdef PETRA_ENABLE_CPP14
+    SwitchTable<forward_callbacks,
+      std::integer_sequence<Integral, static_cast<Integral>(Values)...>>
+        cast_to_enum;
+#else
     static constexpr auto cast_to_enum =
         petra::make_switch_table<Integral, static_cast<Integral>(Values)...>(
             forward_callbacks{});
+#endif  // PETRA_ENABLE_CPP14
   };
 
   template<typename Enum, Enum... Values, typename F>

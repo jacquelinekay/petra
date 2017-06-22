@@ -9,6 +9,12 @@
 #include <array>
 #include <iostream>
 
+#ifdef PETRA_ENABLE_CPP14
+#include <boost/hana/functional/overload_linearly.hpp>
+
+namespace hana = boost::hana;
+#endif  // PETRA_ENABLE_CPP14
+
 template<typename Integral, Integral Size>
 struct test {
   template<Integral N>
@@ -30,10 +36,25 @@ void run_test(S&& table) {
 int main() {
   constexpr std::size_t USize = 10ul;
   {
-    run_test<std::size_t, USize>(petra::make_sequential_table<USize>(test<std::size_t, USize>{}));
+#ifdef PETRA_ENABLE_CPP14
+    run_test<std::size_t, USize>(
+        petra::make_sequential_table<std::size_t, USize>(test<std::size_t, USize>{}));
+#else
+    run_test<std::size_t, USize>(
+        petra::make_sequential_table<USize>(test<std::size_t, USize>{}));
+#endif  // PETRA_ENABLE_CPP14
   }
 
   {
+#ifdef PETRA_ENABLE_CPP14
+    auto test_with_error = hana::overload_linearly(
+        [](petra::InvalidInputError&&) noexcept {
+          return USize;
+        },
+        [](auto&& i) noexcept {
+          return std::decay_t<decltype(i)>::value;
+        });
+#else
     constexpr auto test_with_error = [USize](auto&& i) noexcept {
       using T = decltype(i);
       if constexpr (petra::utilities::is_error_type<T>()) {
@@ -42,9 +63,11 @@ int main() {
         return std::decay_t<T>::value;
       }
     };
-    auto table = petra::make_sequential_table<USize>(test_with_error);
+#endif  // PETRA_ENABLE_CPP14
+    auto table = petra::make_sequential_table<std::size_t, USize>(test_with_error);
 
-    static_assert(noexcept(table(std::declval<std::size_t>())));
+    static_assert(noexcept(table(std::declval<std::size_t>())),
+        "Noexcept correctness test failed for sequential_table.");
 
     run_test<std::size_t, USize>(table);
     // Try with an integer not in the set
@@ -52,6 +75,16 @@ int main() {
   }
 
   {
+#ifdef PETRA_ENABLE_CPP14
+    auto test_with_exception = hana::overload_linearly(
+        [](petra::InvalidInputError&&) {
+          throw std::runtime_error("Invalid input detected");
+          return USize;
+        },
+        [](auto&& i) {
+          return std::decay_t<decltype(i)>::value;
+        });
+#else
     // Try with a throwing callback
     auto test_with_exception = [USize](auto&& i) {
       using T = std::decay_t<decltype(i)>;
@@ -62,14 +95,16 @@ int main() {
         return T::value;
       }
     };
-    auto table = petra::make_sequential_table<USize>(test_with_exception);
-    static_assert(!noexcept(table(std::declval<std::size_t>())));
+#endif  // PETRA_ENABLE_CPP14
+    auto table = petra::make_sequential_table<std::size_t, USize>(test_with_exception);
+    static_assert(!noexcept(table(std::declval<std::size_t>())),
+        "Noexcept test failed for throwing callback in sequential_table.");
   }
 
   // Unsigned type
   {
     constexpr int SSize = 10;
-    run_test<int, SSize>(petra::make_sequential_table<SSize>(test<int, SSize>{}));
+    run_test<int, SSize>(petra::make_sequential_table<int, SSize>(test<int, SSize>{}));
   }
 
   return 0;

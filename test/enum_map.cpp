@@ -40,11 +40,14 @@ int main() {
             test{});
 
     static_assert(noexcept(
-        enum_table(std::declval<Color>(), color_constant<Color::Red>{})));
+        enum_table(std::declval<Color>(), color_constant<Color::Red>{})),
+        "Noexcept correctness test failed for Color::Red");
     static_assert(noexcept(
-        enum_table(std::declval<Color>(), color_constant<Color::Green>{})));
+        enum_table(std::declval<Color>(), color_constant<Color::Green>{})),
+        "Noexcept correctness test failed for Color::Green");
     static_assert(noexcept(
-        enum_table(std::declval<Color>(), color_constant<Color::Blue>{})));
+        enum_table(std::declval<Color>(), color_constant<Color::Blue>{})),
+        "Noexcept correctness test failed for Color::Blue");
 
     enum_table(Color::Red, color_constant<Color::Red>{});
     enum_table(Color::Green, color_constant<Color::Green>{});
@@ -59,6 +62,7 @@ int main() {
         petra::make_enum_map<Color, Color::Red, Color::Green, Color::Blue>(
             [](auto&&) { throw std::runtime_error("Catch this!"); });
 
-    static_assert(!noexcept(enum_table(std::declval<Color>())));
+    static_assert(!noexcept(enum_table(std::declval<Color>())),
+        "Noexcept correctness test failed for throwing callback");
   }
 }

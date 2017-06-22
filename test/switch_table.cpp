@@ -40,11 +40,6 @@ struct test {
   std::array<std::size_t, TestSet::size()> results = {{0}};
 };
 
-template<typename T, typename S>
-void run_test(S&& table) {
-  return run_test(T{}, table);
-}
-
 template<typename S, size_t... I>
 void run_test(std::index_sequence<I...>, S&& table) {
   static_assert(noexcept(table(std::declval<std::size_t>())),
@@ -60,15 +55,15 @@ void run_test(std::index_sequence<I...>, S&& table) {
 }
 
 int main() {
-  { run_test<TestSet>(petra::make_switch_table(test{}, TestSet{})); }
+  { run_test(TestSet{}, petra::make_switch_table(test{}, TestSet{})); }
 
   {
 #ifdef PETRA_ENABLE_CPP14
     auto test_with_error = hana::overload_linearly(
-        [](petra::InvalidInputError&&) {
+        [](petra::InvalidInputError&&) noexcept {
           return TestSet::size();
         },
-        [](auto&& i) {
+        [](auto&& i) noexcept {
           return std::decay_t<decltype(i)>::value;
         });
 #else
@@ -81,9 +76,9 @@ int main() {
     };
 #endif  // PETRA_ENABLE_CPP14
     auto table = petra::make_switch_table(test_with_error, TestSet{});
-    // run_test(table);
     // Try with an integer not in the set
     PETRA_ASSERT(table(33) == TestSet::size());
+    run_test(TestSet{}, std::move(table));
   }
 
   {

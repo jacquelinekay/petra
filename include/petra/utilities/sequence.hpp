@@ -48,7 +48,7 @@ namespace petra {
   static constexpr decltype(I) map_to_index() noexcept {
 #ifdef PETRA_ENABLE_CPP14
     namespace hana = boost::hana;
-    return hana::find(hana::tuple_c<T, Sequence...>, hana::integral_constant<In, I>{});
+    return hana::find(hana::tuple_c<T, Sequence...>, hana::integral_constant<In, I>{}).value();
 #else
     using IndexT = decltype(I);
     return access_sequence_helper<I, T>(
