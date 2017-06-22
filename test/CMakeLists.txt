@@ -4,9 +4,9 @@
 
 include(petra_add_test)
 
-set(test_names "enum_map;linear_hash;sequence_map;sequential_table;switch_table")
+set(test_names "enum_map;sequence_map;sequential_table;switch_table")
 if(NOT PETRA_USE_CPP14)
-  list(APPEND test_names "callback_table;chd;map;string_map")
+  list(APPEND test_names "callback_table;chd;linear_hash;map;string_map")
 endif()
 
 foreach(_name IN LISTS test_names)

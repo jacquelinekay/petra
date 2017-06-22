@@ -8,6 +8,11 @@
 
 #include <iostream>
 
+#ifdef PETRA_ENABLE_CPP14
+#include <boost/hana/for_each.hpp>
+#include <boost/hana/tuple.hpp>
+#endif  // PETRA_ENABLE_CPP14
+
 static constexpr std::size_t sequence_size = 3;
 static constexpr std::size_t upper_bound = 4;
 using Array = std::array<std::size_t, sequence_size>;
@@ -39,7 +44,16 @@ struct callback {
                   std::index_sequence<Indices...>&&) noexcept {
     static_assert(sizeof...(Sequence) == sequence_size,
         "Callback argument had incorrect sequence size.");
+#ifdef PETRA_ENABLE_CPP14
+    namespace hana = boost::hana;
+    hana::for_each(hana::tuple_c<std::size_t, Indices...>,
+        [&seq, &input](auto&& i) {
+          constexpr auto I = std::decay_t<decltype(i)>::value;
+          PETRA_ASSERT(petra::access_sequence<I>(seq) == input[I]);
+        });
+#else
     (PETRA_ASSERT(petra::access_sequence<Indices>(seq) == input[Indices]), ...);
+#endif  // PETRA_ENABLE_CPP14
   }
 
   template<typename... Args>
@@ -58,7 +72,11 @@ int main() {
   {
     Array test{{1, 3, 2}};
 
+#ifdef PETRA_ENABLE_CPP14
+    auto m = petra::make_sequence_map<std::size_t, sequence_size, upper_bound>(callback{});
+#else
     auto m = petra::make_sequence_map<sequence_size, upper_bound>(callback{});
+#endif  // PETRA_ENABLE_CPP14
     static_assert(
         noexcept(m(test, test, std::make_index_sequence<sequence_size>{})),
         "Noexcept test failed for sequence map.");
@@ -74,7 +92,7 @@ int main() {
     auto callback_with_throw = [](auto&&...) {
       throw std::runtime_error("Catch this!");
     };
-    auto m = petra::make_sequence_map<sequence_size, upper_bound>(
+    auto m = petra::make_sequence_map<std::size_t, sequence_size, upper_bound>(
         callback_with_throw);
     static_assert(!noexcept(m(std::declval<Array>())),
         "Not-noexcept test failed for sequence map.");

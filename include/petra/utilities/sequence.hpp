@@ -60,7 +60,11 @@ namespace petra {
   template<PETRA_AUTO(In) I, decltype(I)... Sequence>
   static constexpr std::size_t
   map_to_index(std::integer_sequence<decltype(I), Sequence...>&&) noexcept {
+#ifdef PETRA_ENABLE_CPP14
+    return map_to_index<In, I, decltype(I), Sequence...>();
+#else
     return map_to_index<I, decltype(I), Sequence...>();
+#endif
   }
 
 #ifndef PETRA_ENABLE_CPP14

@@ -62,9 +62,9 @@ namespace petra {
   static constexpr bool Constant() {
 #ifdef PETRA_ENABLE_CPP14
     namespace hana = boost::hana;
-    return hana::if_(is_detected<data_accessor_t, T>{},
-      []() {
-        return Comparable<T, decltype(T::value)>();
+    return hana::eval_if(is_detected<data_accessor_t, T>{},
+      [](auto _) {
+        return _(Comparable<T, decltype(T::value)>());
       },
       []() {
         return false;

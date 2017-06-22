@@ -24,7 +24,7 @@ struct test {
 
 template<typename Integral, Integral Size, typename S>
 void run_test(S&& table) {
-  for (decltype(Size) i = 0; i < Size; ++i) { table(i); }
+  for (Integral i = 0; i < Size; ++i) { table(i); }
 }
 
 int main() {
@@ -69,7 +69,7 @@ int main() {
   // Unsigned type
   {
     constexpr int SSize = 10;
-    run_test<int, SSize>(petra::make_sequential_table<SSize>(test<std::size_t, SSize>{}));
+    run_test<int, SSize>(petra::make_sequential_table<SSize>(test<int, SSize>{}));
   }
 
   return 0;

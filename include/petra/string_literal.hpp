@@ -4,6 +4,10 @@
 
 #pragma once
 
+#ifdef PETRA_ENABLE_CPP14
+static_assert(false, "Unable to include petra::string_literal: not working with C++14 yet.");
+#endif
+
 #include <array>
 #include <string>
 

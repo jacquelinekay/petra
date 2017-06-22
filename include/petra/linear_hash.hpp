@@ -9,6 +9,11 @@
 #include <tuple>
 #include <utility>
 
+#ifdef PETRA_ENABLE_CPP14
+#include <boost/hana/fold.hpp>
+#include <boost/hana/tuple.hpp>
+#endif
+
 /* This is a fallback option for small input sets which CHD can't handle.
  * It has linear runtime complexity, but for small sizes (less than 4) this may
  * be acceptable.
@@ -51,8 +56,21 @@ namespace petra {
     }
   };
 
+#ifdef PETRA_ENABLE_CPP14
+  struct constant_concept_helper {
+    template<typename Elem>
+    constexpr auto operator()(bool output, Elem&&) const {
+      return output && Constant<typename std::decay_t<Elem>::type>();
+    }
+  };
+
+  template<typename... Inputs, typename = std::enable_if_t<boost::hana::fold(
+                                   boost::hana::tuple_t<Inputs...>, true,
+                                   constant_concept_helper{})>>
+#else
   template<typename... Inputs,
            typename = std::enable_if_t<(Constant<Inputs>() && ...)>>
+#endif  // PETRA_ENABLE_CPP14
   constexpr decltype(auto) make_linear_hash(Inputs&&...) {
     return LinearHash<Inputs...>{};
   }
