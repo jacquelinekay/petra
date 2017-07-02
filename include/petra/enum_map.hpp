@@ -4,13 +4,11 @@
 
 #pragma once
 
+#include "petra/detail/macros.hpp"
 #include "petra/switch_table.hpp"
 #include "petra/utilities.hpp"
 
 namespace petra {
-
-#define PETRA_NOEXCEPT_FUNCTION_BODY(...)                                      \
-  noexcept(noexcept(__VA_ARGS__)) { return __VA_ARGS__; }
 
   /* Provides runtime to compile-time string mapping for enum types
    * */
@@ -77,7 +75,5 @@ namespace petra {
   make_enum_map(F&& f, std::integral_constant<Enum, Values>&&...) {
     return EnumMap<F, Enum, Values...>(std::forward<F>(f));
   }
-
-#undef PETRA_NOEXCEPT_FUNCTION_BODY
 
 }  // namespace petra

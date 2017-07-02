@@ -4,14 +4,12 @@
 
 #pragma once
 
+#include "petra/detail/macros.hpp"
 #include "petra/chd.hpp"
 #include "petra/detail/index_map.hpp"
 #include "petra/sequential_table.hpp"
 
 namespace petra {
-
-#define PETRA_NOEXCEPT_FUNCTION_BODY(...)                                      \
-  noexcept(noexcept(__VA_ARGS__)) { return __VA_ARGS__; }
 
   /* Provides runtime to compile-time string mapping for strings
    *
@@ -71,7 +69,5 @@ namespace petra {
                                         Error&&) {
     return StringMap<F, Error, Inputs...>(std::forward<F>(f));
   }
-
-#undef PETRA_NOEXCEPT_FUNCTION_BODY
 
 }  // namespace petra

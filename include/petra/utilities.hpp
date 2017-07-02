@@ -9,12 +9,6 @@
 
 #include "petra/utilities/fold.hpp"
 
-#ifdef PETRA_ENABLE_CPP14
-#define PETRA_AUTO(Typename) typename Typename, Typename
-#else
-#define PETRA_AUTO(Typename) auto
-#endif  // PETRA_ENABLE_CPP14
-
 namespace petra {
 
   struct InvalidInputError {};

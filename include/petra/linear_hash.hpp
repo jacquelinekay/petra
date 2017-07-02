@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "petra/detail/macros.hpp"
 #include "petra/concepts.hpp"
 
 #include <tuple>
@@ -20,10 +21,6 @@
  * */
 
 namespace petra {
-
-#define PETRA_NOEXCEPT_FUNCTION_BODY(...)                                      \
-  noexcept(noexcept(__VA_ARGS__)) { return __VA_ARGS__; }
-
   template<typename... Inputs>
   struct LinearHash {
     template<typename RuntimeType>
@@ -74,7 +71,5 @@ namespace petra {
   constexpr decltype(auto) make_linear_hash(Inputs&&...) {
     return LinearHash<Inputs...>{};
   }
-
-#undef PETRA_NOEXCEPT_FUNCTION_BODY
 
 }  // namespace petra

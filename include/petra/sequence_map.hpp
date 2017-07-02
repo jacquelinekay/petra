@@ -8,14 +8,11 @@
 #include <cmath>
 #include <utility>
 
+#include "petra/detail/macros.hpp"
 #include "petra/sequential_table.hpp"
 #include "petra/utilities.hpp"
 
 namespace petra {
-
-#define PETRA_NOEXCEPT_FUNCTION_BODY(...)                                      \
-  noexcept(noexcept(__VA_ARGS__)) { return __VA_ARGS__; }
-
   /* Given a sequence size known at compile time, map a std::array to a
    * std::integer_sequence
    * */
@@ -108,7 +105,11 @@ namespace petra {
 #else
     static constexpr auto map_to_seq = [](
         auto&& i, auto& cb,
-        auto&&... args) noexcept(noexcept(PETRA_MAP_TO_SEQUENCE_RETURNS(0))) {
+        auto&&... args)
+#ifdef __clang__
+    noexcept(noexcept(PETRA_MAP_TO_SEQUENCE_RETURNS(0)))
+#endif  // __clang__
+    {
       using T = std::decay_t<decltype(i)>;
       if constexpr (utilities::is_error_type<T>()) {
         return cb(std::forward<T>(i),
@@ -136,7 +137,6 @@ namespace petra {
 #endif  // PETRA_ENABLE_CPP14 
 
 #undef PETRA_BUILD_SEQUENCE_RETURNS
-#undef PETRA_NOEXCEPT_FUNCTION_BODY
 #undef PETRA_MAP_TO_SEQUENCE_RETURNS
 
 }  // namespace petra

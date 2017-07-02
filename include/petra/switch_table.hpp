@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "petra/detail/macros.hpp"
 #include "petra/utilities.hpp"
 #include "petra/utilities/sequence.hpp"
 
@@ -27,9 +28,6 @@ namespace petra {
           std::integral_constant<std::size_t, Iterations + 1>{}, i,            \
           std::forward<Args>(args)...);                                        \
   }
-
-#define PETRA_NOEXCEPT_FUNCTION_BODY(...)                                      \
-  noexcept(noexcept(__VA_ARGS__)) { return __VA_ARGS__; }
 
   template<typename F, typename IndexSeq>
   struct SwitchTable;
@@ -60,25 +58,31 @@ namespace petra {
 
     template<std::size_t Iterations, typename... Args>
     constexpr auto
-    apply(size_c<Iterations>&&, Integral i, Args&&... args) noexcept(
-        noexcept(PETRA_RECURSIVE_SWITCH_TABLE_RETURNS())) {
+    apply(size_c<Iterations>&&, Integral i, Args&&... args)
+#ifdef __clang__
+    noexcept(noexcept(PETRA_RECURSIVE_SWITCH_TABLE_RETURNS()))
+#endif  // __clang__
+    {
       PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY()
     }
 
     template<std::size_t Iterations, typename... Args>
     constexpr auto apply(size_c<Iterations>&&, Integral i, Args&&... args) const
-        noexcept(noexcept(PETRA_RECURSIVE_SWITCH_TABLE_RETURNS())) {
+#ifdef __clang__
+    noexcept(noexcept(PETRA_RECURSIVE_SWITCH_TABLE_RETURNS()))
+#endif  // __clang__
+    {
       PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY()
     }
 
     template<typename... Args>
     constexpr auto operator()(Integral i, Args&&... args)
-        PETRA_NOEXCEPT_FUNCTION_BODY(this->apply(size_c<0>{}, i,
+        PETRA_NOEXCEPT_FUNCTION_BODY(apply(size_c<0>{}, i,
                                                  std::forward<Args>(args)...));
 
     template<typename... Args>
     constexpr auto operator()(Integral i, Args&&... args) const
-        PETRA_NOEXCEPT_FUNCTION_BODY(this->apply(size_c<0>{}, i,
+        PETRA_NOEXCEPT_FUNCTION_BODY(apply(size_c<0>{}, i,
                                                  std::forward<Args>(args)...));
 
     F callable;
@@ -99,6 +103,5 @@ namespace petra {
 
 #undef PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY
 #undef PETRA_RECURSIVE_SWITCH_TABLE_RETURNS
-#undef PETRA_NOEXCEPT_FUNCTION_BODY
 
 }  // namespace petra

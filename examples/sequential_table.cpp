@@ -10,8 +10,7 @@ static auto fill_array(petra::InvalidInputError&&) {
 }
 
 template<typename Integral, Integral N>
-static constexpr auto
-fill_array(std::integral_constant<Integral, N>&&) {
+static auto fill_array(std::integral_constant<Integral, N>&&) {
   std::array<int, N> buckets;
   /* ... */
   (void)buckets;

@@ -7,6 +7,7 @@
 #include <utility>
 
 #include "petra/concepts.hpp"
+#include "petra/detail/macros.hpp"
 #include "petra/utilities.hpp"
 
 namespace petra {
@@ -21,9 +22,6 @@ namespace petra {
       return apply(std::integral_constant<Integral, I + 1>{}, i,               \
                    std::forward<Args>(args)...);                               \
   }
-
-#define PETRA_NOEXCEPT_FUNCTION_BODY(...)                                      \
-  noexcept(noexcept(__VA_ARGS__)) { return __VA_ARGS__; }
 
 #ifndef PETRA_ENABLE_CPP14
   // Utility for error handling
@@ -66,14 +64,20 @@ namespace petra {
                                               std::forward<Args>(args)...));
 
     template<Integral I, typename... Args>
-    constexpr auto apply(int_c<I>&&, Integral i, Args&&... args) noexcept(
-        noexcept(PETRA_RECURSIVE_SWITCH_TABLE_RETURNS())) {
+    constexpr auto apply(int_c<I>&&, Integral i, Args&&... args)
+#ifdef __clang__
+    noexcept(noexcept(PETRA_RECURSIVE_SWITCH_TABLE_RETURNS()))
+#endif  // __clang__
+    {
       PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY()
     }
 
     template<Integral I, typename... Args>
     constexpr auto apply(int_c<I>&&, Integral i, Args&&... args) const
-        noexcept(noexcept(PETRA_RECURSIVE_SWITCH_TABLE_RETURNS())) {
+#ifdef __clang__
+    noexcept(noexcept(PETRA_RECURSIVE_SWITCH_TABLE_RETURNS()))
+#endif  // __clang__
+    {
       PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY()
     }
 
@@ -101,7 +105,6 @@ namespace petra {
           std::forward<F>(f)});
 
 #undef PETRA_RECURSIVE_SWITCH_TABLE_RETURNS
-#undef PETRA_NOEXCEPT_FUNCTION_BODY
 #undef PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY
 
 }  // namespace petra

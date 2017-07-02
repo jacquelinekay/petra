@@ -5,6 +5,8 @@
 #pragma once
 
 #include <utility>
+
+#include "petra/detail/macros.hpp"
 #include "petra/concepts.hpp"
 #include "petra/utilities.hpp"
 

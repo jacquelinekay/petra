@@ -77,9 +77,11 @@ int main() {
 #else
     auto m = petra::make_sequence_map<sequence_size, upper_bound>(callback{});
 #endif  // PETRA_ENABLE_CPP14
+#ifdef __clang__
     static_assert(
         noexcept(m(test, test, std::make_index_sequence<sequence_size>{})),
         "Noexcept test failed for sequence map.");
+#endif // __clang__
     sequence_key_test<decltype(m)>();
     m(test, test, std::make_index_sequence<sequence_size>{});
 
