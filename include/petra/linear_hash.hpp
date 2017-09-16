@@ -5,6 +5,7 @@
 #pragma once
 
 #include "petra/concepts.hpp"
+#include "petra/detail/macros.hpp"
 
 #include <tuple>
 #include <utility>
@@ -15,9 +16,6 @@
  * */
 
 namespace petra {
-
-#define PETRA_NOEXCEPT_FUNCTION_BODY(...)                                      \
-  noexcept(noexcept(__VA_ARGS__)) { return __VA_ARGS__; }
 
   template<typename... Inputs>
   struct LinearHash {
@@ -56,7 +54,5 @@ namespace petra {
   constexpr decltype(auto) make_linear_hash(Inputs&&...) {
     return LinearHash<Inputs...>{};
   }
-
-#undef PETRA_NOEXCEPT_FUNCTION_BODY
 
 }  // namespace petra

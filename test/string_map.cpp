@@ -37,13 +37,16 @@ int main() {
         "asdf"_s, "qwerty"_s, "quux"_s, "int"_s, "arguments"_s, "foobar"_s,
         "abcd"_s, "badc"_s, "foo"_s, "oof"_s);
 
+#ifdef __clang__
     static_assert(noexcept(string_hash(std::declval<const char*>())));
+#endif
     for (const auto& s : test_strings) {
       string_hash(s);
       PETRA_ASSERT(results[s] == 1);
     }
   }
 
+#ifdef __clang__
   {
     auto string_hash = petra::make_string_map(
         [](auto&&) { throw std::runtime_error("Rawr! I'm angry!"); }, "asdf"_s,
@@ -52,6 +55,7 @@ int main() {
 
     static_assert(!noexcept(string_hash(std::declval<const char*>())));
   }
+#endif
 
   std::cout << "All string hash tests passed.\n";
   return 0;

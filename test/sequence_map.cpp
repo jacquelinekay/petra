@@ -36,8 +36,10 @@ int main() {
     Array test{{1, 3, 2}};
 
     auto m = petra::make_sequence_map<sequence_size, upper_bound>(callback{});
+#ifdef __clang__
     static_assert(
         noexcept(m(test, test, std::make_index_sequence<sequence_size>{})));
+#endif
     m(test, test, std::make_index_sequence<sequence_size>{});
     // Error case
     test[0] = 4;

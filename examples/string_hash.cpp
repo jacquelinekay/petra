@@ -4,7 +4,6 @@
 
 #include <iostream>
 
-// #include "petra/chd.hpp"
 #include "petra/string_literal.hpp"
 #include "petra/string_map.hpp"
 #include "petra/utilities.hpp"

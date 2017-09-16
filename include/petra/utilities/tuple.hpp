@@ -12,7 +12,7 @@ namespace petra {
 
   template<typename Tuple>
   static constexpr decltype(auto) tuple_size(Tuple&&) {
-    return std::tuple_size<std::decay_t<Tuple>>{};
+    return std::tuple_size<std::decay_t<Tuple>>::value;
   }
 
   // check if an element is in the tuple

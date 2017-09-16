@@ -7,17 +7,19 @@ project(petra)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # Compiler check
-if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
     message(FATAL_ERROR
-"Petra only builds with Clang 5, and you have selected ${CMAKE_CXX_COMPILER_ID}.
-Please set CMAKE_CXX_COMPILER to the correct executable and rerun CMake.")
+        "Petra only builds with Clang 5, and you have selected an earlier version.\n
+        Please build Clang from source or download a nightly build from apt.llvm.org.")
 endif()
 
-if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.0)
     message(FATAL_ERROR
-"Petra only builds with Clang 5, and you have selected an earlier version.\n
-Please build Clang from source or download a nightly build from apt.llvm.org.")
+        "Petra only builds with GCC 8, and you have selected an earlier version.\n
+        Please build GCC from source.")
 endif()
+
 
 add_library(petra INTERFACE)
 target_include_directories(petra INTERFACE include)

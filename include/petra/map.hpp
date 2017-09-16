@@ -109,10 +109,9 @@ namespace petra {
             return MapAccessStatus::invalid_key;
           } else {
             constexpr std::size_t Index = index_map[T::value];
-            if constexpr (
-                std::is_same<
-                    std::tuple_element_t<Index, std::decay_t<decltype(vs)>>,
-                    std::decay_t<decltype(v)>>{}) {
+            if constexpr (std::is_same<std::tuple_element_t<
+                                           Index, std::decay_t<decltype(vs)>>,
+                                       std::decay_t<decltype(v)>>{}) {
               std::get<Index>(vs) = v;
               return MapAccessStatus::success;
             } else {

@@ -35,7 +35,9 @@ void run_test(S&& table) {
 
 template<typename S, size_t... I>
 void run_test(std::index_sequence<I...>, S&& table) {
+#ifdef __clang__
   static_assert(noexcept(table(std::declval<std::size_t>())));
+#endif
   (table(I), ...);
 }
 
