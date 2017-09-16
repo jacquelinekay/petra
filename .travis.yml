@@ -5,13 +5,12 @@ sudo: required
 addons:
   apt:
     sources:
-    - llvm-toolchain-trusty
-    - sourceline: 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty main'
-      key_url: 'http://apt.llvm.org/llvm-snapshot.gpg.key'
+    - llvm-toolchain-trusty-5.0
     - ubuntu-toolchain-r-test
 
 # Install gcc-7 from a PPA to get a recent libstdc++
 before_install:
+  - sudo apt-get clean
   - sudo apt-get update -q
   - sudo apt-get install clang-5.0 gcc-7 g++-7 -y
 
