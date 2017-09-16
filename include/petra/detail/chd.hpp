@@ -89,7 +89,6 @@ namespace petra {
       static_assert(tuple_size(initial_tuple) > 0);
       static_assert(tuple_size(initial_tuple) == n_uniques);
 
-      // GCC doesn't think lambda captures can be constexpr
       constexpr auto accumulate_sets = [](const auto& dict, const auto& str) {
         constexpr auto hashed_value = chd(0, std::decay_t<decltype(str)>{},
                                           sizeof...(Inputs), adl::chd_tag{});
@@ -176,7 +175,6 @@ namespace petra {
                   string_list...);
             };
 
-        // gcc doesn't like this for some reason, I think std::apply is broken.
         constexpr auto disambiguated_result = std::apply(disambiguate, subsets);
         constexpr auto next_keys = disambiguated_result.first;
         constexpr auto hashed_values = disambiguated_result.second;
@@ -200,12 +198,12 @@ namespace petra {
 
           if constexpr (Status::value == hash_status::Unique) {
             auto freelist_pair = pop_front(cur_freelist);
+            // Swap out the typevalue with the value
             return std::make_pair(
                 insert_at<index>(
                     result, std::make_pair(Status::value, freelist_pair.first)),
                 freelist_pair.second);
           } else {
-            // Swap out the typevalue with the value
             return std::make_pair(
                 insert_at<index>(
                     result, std::make_pair(Status::value,
@@ -229,7 +227,10 @@ namespace petra {
                 map_to_index<std::decay_t<decltype(index)>::value>(
                     KeySequence{});
 
-            if constexpr (I >= tuple_size(unique_values)) {
+            // constexpr std::size_t Size = tuple_size(unique_values);
+            constexpr std::size_t Size =
+                std::tuple_size<std::decay_t<decltype(unique_values)>>::value;
+            if constexpr (I >= Size) {
               return std::make_pair(hash_status::Empty, 0ul);
             } else {
               return std::get<I>(unique_values);

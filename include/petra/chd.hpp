@@ -19,7 +19,7 @@ namespace petra {
       if constexpr (!use_fallback) {
         using adl::chd;
         std::size_t key = chd(0, input, set_size, adl::chd_tag{});
-        const auto[status, d] = second_hash(key);
+        const auto [status, d] = second_hash(key);
         switch (status) {
           case detail::hash_status::Unique: return d;
           case detail::hash_status::Collision:

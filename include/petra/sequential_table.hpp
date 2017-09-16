@@ -7,6 +7,7 @@
 #include <utility>
 
 #include "petra/concepts.hpp"
+#include "petra/detail/macros.hpp"
 #include "petra/utilities.hpp"
 
 namespace petra {
@@ -17,22 +18,20 @@ namespace petra {
 #define PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY()                              \
   using Result =                                                               \
       std::result_of_t<F(std::integral_constant<Integral, I>, Args...)>;       \
-  if constexpr (std::is_signed<Integral>{} && N < 0 && I > N) {                    \
+  if constexpr (std::is_signed<Integral>{} && N < 0 && I > N) {                \
     switch (i) {                                                               \
       case I: return PETRA_RECURSIVE_SWITCH_TABLE_RETURNS();                   \
       default: return apply<I - 1>(i, std::forward<Args>(args)...);            \
     }                                                                          \
-  } else if constexpr ((std::is_unsigned<Integral>{} || N > 0) && I < N) {                \
+  } else if constexpr ((std::is_unsigned<Integral>{} || N > 0) && I < N) {     \
     switch (i) {                                                               \
       case I: return PETRA_RECURSIVE_SWITCH_TABLE_RETURNS();                   \
       default: return apply<I + 1>(i, std::forward<Args>(args)...);            \
     }                                                                          \
   } else if constexpr (ErrorCallback{} || !std::is_same<Result, void>{}) {     \
+    (void)i;                                                                   \
     return callable(InvalidInputError{}, std::forward<Args>(args)...);         \
   }
-
-#define PETRA_NOEXCEPT_FUNCTION_BODY(...)                                      \
-  noexcept(noexcept(__VA_ARGS__)) { return __VA_ARGS__; }
 
   // Utility for error handling
   template<typename T, auto Size>
@@ -80,7 +79,6 @@ namespace petra {
           std::forward<F>(f)});
 
 #undef PETRA_RECURSIVE_SWITCH_TABLE_RETURNS
-#undef PETRA_NOEXCEPT_FUNCTION_BODY
 #undef PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY
 
 }  // namespace petra

@@ -24,7 +24,9 @@ int main() {
       "asdf"_s, "qwerty"_s, "quux"_s, "int"_s, "arguments"_s, "foobar"_s,
       "abcd"_s, "badc"_s, "foo"_s, "oof"_s);
 
+#ifdef __clang__
   static_assert(noexcept(string_hash(std::declval<const char*>())));
+#endif
 
   for (const auto& s : test_strings) {
     std::size_t N = string_hash(s);

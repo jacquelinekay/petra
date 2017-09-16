@@ -10,8 +10,7 @@
 #include <iostream>
 
 // constexpr std::size_t Size = 10;
-namespace petra {
-}
+namespace petra {}
 
 template<auto Size>
 struct test {
@@ -38,9 +37,7 @@ void run_test(S&& table) {
 
 int main() {
   constexpr std::size_t USize = 10ul;
-  {
-    run_test<USize>(petra::make_sequential_table<USize>(test<USize>{}));
-  }
+  { run_test<USize>(petra::make_sequential_table<USize>(test<USize>{})); }
 
   {
     constexpr auto test_with_error = [USize](auto&& i) noexcept {
@@ -53,7 +50,9 @@ int main() {
     };
     auto table = petra::make_sequential_table<USize>(test_with_error);
 
+#ifdef __clang__
     static_assert(noexcept(table(std::declval<std::size_t>())));
+#endif
 
     run_test<USize>(table);
     // Try with an integer not in the set

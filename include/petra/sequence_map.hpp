@@ -7,20 +7,19 @@
 #include <array>
 #include <utility>
 
+#include "petra/detail/macros.hpp"
 #include "petra/sequential_table.hpp"
 #include "petra/utilities.hpp"
 
 namespace petra {
-
-#define PETRA_NOEXCEPT_FUNCTION_BODY(...)                                      \
-  noexcept(noexcept(__VA_ARGS__)) { return __VA_ARGS__; }
 
   /* Given a sequence size known at compile time, map a std::array to a
    * std::integer_sequence
    * */
   template<typename F, auto SeqSize, decltype(SeqSize) UpperBound>
   struct SequenceMap {
-    static_assert(SeqSize > 0, "Cannot instantiate a sequence map of size zero.");
+    static_assert(SeqSize > 0,
+                  "Cannot instantiate a sequence map of size zero.");
 
     constexpr SequenceMap(F&& f) noexcept : callback(f) {}
 
@@ -53,7 +52,8 @@ namespace petra {
                           std::forward<Args>(args)...);
         } else {
           static_assert(CurrentIndex < Size - 1);
-          constexpr Integral NextIndex = CurrentIndex + static_cast<Integral>(1);
+          constexpr Integral NextIndex =
+              CurrentIndex + static_cast<Integral>(1);
           return make_sequential_table<UpperBound>(
               helper<NextIndex, Sequence..., I>{})(
               input[NextIndex], input, callback, std::forward<Args>(args)...);
@@ -77,7 +77,5 @@ namespace petra {
   constexpr decltype(auto) make_sequence_map(F&& f)
       PETRA_NOEXCEPT_FUNCTION_BODY(
           SequenceMap<F, SeqSize, UpperBound>(std::forward<F>(f)));
-
-#undef PETRA_NOEXCEPT_FUNCTION_BODY
 
 }  // namespace petra

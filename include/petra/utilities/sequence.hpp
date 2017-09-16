@@ -10,7 +10,7 @@
 
 namespace petra {
 
-  template<auto I, typename T, T... Sequence, decltype(I)... Indices>
+  template<auto I, typename T, T... Sequence, auto... Indices>
   static constexpr decltype(I) access_sequence_helper(
       const std::integer_sequence<T, Sequence...>&,
       const std::integer_sequence<decltype(I), Indices...>&) noexcept {
@@ -34,13 +34,13 @@ namespace petra {
         std::integer_sequence<T, Sequence...>{});
   }
 
-  template<auto I, decltype(I)... Sequence>
+  template<auto I, auto... Sequence>
   static constexpr std::size_t
   map_to_index(std::integer_sequence<decltype(I), Sequence...>&&) noexcept {
     return map_to_index<I, decltype(I), Sequence...>();
   }
 
-  template<auto I, typename... T, decltype(I)... J>
+  template<auto I, typename... T, auto... J>
   static constexpr std::size_t
   map_to_index_helper(std::tuple<T...>&& t,
                       std::integer_sequence<decltype(I), J...>&&) noexcept {
@@ -53,8 +53,9 @@ namespace petra {
         t, std::make_integer_sequence<decltype(I), sizeof...(T)>{});
   }
 
-  template<auto I, decltype(I)... J>
-  static constexpr auto append(std::integer_sequence<decltype(I), J...>) noexcept {
+  template<auto I, auto... J>
+  static constexpr auto
+  append(std::integer_sequence<decltype(I), J...>) noexcept {
     return std::integer_sequence<decltype(I), J..., I>{};
   }
 
@@ -63,7 +64,7 @@ namespace petra {
     return std::integer_sequence<T>{};
   }
 
-  template<auto I, decltype(I)... Is>
+  template<auto I, auto... Is>
   static constexpr auto
   pop_front(const std::integer_sequence<decltype(I), I, Is...>&) noexcept {
     return std::make_pair(I, std::integer_sequence<decltype(I), Is...>{});
@@ -87,8 +88,9 @@ namespace petra {
   }
 
   template<typename Integral, Integral... J>
-  static constexpr bool in_sequence(const Integral& I,
-                                    std::integer_sequence<Integral, J...>) noexcept {
+  static constexpr bool
+  in_sequence(const Integral& I,
+              std::integer_sequence<Integral, J...>) noexcept {
     return in_sequence(I, J...);
   }
 

@@ -39,12 +39,14 @@ int main() {
         petra::make_enum_map<Color, Color::Red, Color::Green, Color::Blue>(
             test{});
 
+#ifdef __clang__
     static_assert(noexcept(
         enum_table(std::declval<Color>(), color_constant<Color::Red>{})));
     static_assert(noexcept(
         enum_table(std::declval<Color>(), color_constant<Color::Green>{})));
     static_assert(noexcept(
         enum_table(std::declval<Color>(), color_constant<Color::Blue>{})));
+#endif
 
     enum_table(Color::Red, color_constant<Color::Red>{});
     enum_table(Color::Green, color_constant<Color::Green>{});

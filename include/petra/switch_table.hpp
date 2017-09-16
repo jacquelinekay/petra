@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "petra/detail/macros.hpp"
 #include "petra/utilities.hpp"
 #include "petra/utilities/sequence.hpp"
 
@@ -20,15 +21,13 @@ namespace petra {
       case I: return PETRA_RECURSIVE_SWITCH_TABLE_RETURNS();                   \
       default:                                                                 \
         constexpr std::size_t next = Iterations + 1;                           \
-        return this->apply<access_sequence<next>(IndexSeq{}), next>(           \
+        return apply<access_sequence<next>(IndexSeq{}), next>(                 \
             i, std::forward<Args>(args)...);                                   \
     }                                                                          \
   } else if constexpr (ErrorCallback || !std::is_same<Result, void>{}) {       \
+    (void)i;                                                                   \
     return callable(InvalidInputError{}, std::forward<Args>(args)...);         \
   }
-
-#define PETRA_NOEXCEPT_FUNCTION_BODY(...)                                      \
-  noexcept(noexcept(__VA_ARGS__)) { return __VA_ARGS__; }
 
   template<typename F, typename IndexSeq,
            typename ErrorCallback = std::true_type>
@@ -42,28 +41,26 @@ namespace petra {
 
     using IndexSeq = std::integer_sequence<Integral, Sequence...>;
     template<Integral I, std::size_t Iterations, typename... Args>
-    constexpr auto apply(Integral i, Args&&... args) noexcept(
-        noexcept(PETRA_RECURSIVE_SWITCH_TABLE_RETURNS())) {
+    constexpr auto apply(Integral i, Args&&... args)
+        PETRA_NOEXCEPT_CHECK(PETRA_RECURSIVE_SWITCH_TABLE_RETURNS()) {
       PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY()
     }
 
     template<Integral I, std::size_t Iterations, typename... Args>
     constexpr auto apply(Integral i, Args&&... args) const
-        noexcept(noexcept(PETRA_RECURSIVE_SWITCH_TABLE_RETURNS())) {
+        PETRA_NOEXCEPT_CHECK((PETRA_RECURSIVE_SWITCH_TABLE_RETURNS())) {
       PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY()
     }
 
     template<typename... Args>
     constexpr auto operator()(Integral i, Args&&... args)
-        PETRA_NOEXCEPT_FUNCTION_BODY(
-            this->apply<access_sequence<0>(IndexSeq{}), 0>(
-                i, std::forward<Args>(args)...));
+        PETRA_NOEXCEPT_FUNCTION_BODY(apply<access_sequence<0>(IndexSeq{}), 0>(
+            i, std::forward<Args>(args)...));
 
     template<typename... Args>
     constexpr auto operator()(Integral i, Args&&... args) const
-        PETRA_NOEXCEPT_FUNCTION_BODY(
-            this->apply<access_sequence<0>(IndexSeq{}), 0>(
-                i, std::forward<Args>(args)...));
+        PETRA_NOEXCEPT_FUNCTION_BODY(apply<access_sequence<0>(IndexSeq{}), 0>(
+            i, std::forward<Args>(args)...));
 
   private:
     F callable;
@@ -82,8 +79,7 @@ namespace petra {
           SwitchTable<F, std::integer_sequence<Integral, I...>,
                       std::bool_constant<E>>(std::forward<F>(f)));
 
-#undef PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY
 #undef PETRA_RECURSIVE_SWITCH_TABLE_RETURNS
-#undef PETRA_NOEXCEPT_FUNCTION_BODY
+#undef PETRA_RECURSIVE_SWITCH_TABLE_APPLY_BODY
 
 }  // namespace petra
