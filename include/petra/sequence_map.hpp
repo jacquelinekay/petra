@@ -19,10 +19,9 @@ namespace petra {
    * */
   template<typename F, auto SeqSize, decltype(SeqSize) UpperBound>
   struct SequenceMap {
-    static_assert(SeqSize > 0,
-        "Cannot create a sequence map of size zero.");
+    static_assert(SeqSize > 0, "Cannot create a sequence map of size zero.");
     static_assert(UpperBound > 0,
-        "Cannot create a sequence map with values bounded at 0.");
+                  "Cannot create a sequence map with values bounded at 0.");
 
     constexpr SequenceMap(F&& f) : callback(f) {}
 
@@ -53,38 +52,41 @@ namespace petra {
     }
 
 // TODO: noexcept specifier is a total hack
-#define PETRA_BUILD_SEQUENCE_RETURNS(...) \
+#define PETRA_BUILD_SEQUENCE_RETURNS(...)                                      \
   cb(__VA_ARGS__, std::forward<Args>(args)...)
 
     template<Integral Key, Integral Index, Integral... Sequence,
              typename... Args>
     static constexpr auto build_sequence(F& cb, Args&&... args)
-    PETRA_NOEXCEPT_CHECK(PETRA_BUILD_SEQUENCE_RETURNS(std::make_integer_sequence<Integral, Size>{})) {
+        PETRA_NOEXCEPT_CHECK(PETRA_BUILD_SEQUENCE_RETURNS(
+            std::make_integer_sequence<Integral, Size>{})) {
       if constexpr (Index == Size - 1) {
         static_assert(sizeof...(Sequence) + 1 == Size);
-        return PETRA_BUILD_SEQUENCE_RETURNS(std::integer_sequence<Integral, sequence_from_key(Key, Index), Sequence...>{});
+        return PETRA_BUILD_SEQUENCE_RETURNS(
+            std::integer_sequence<Integral, sequence_from_key(Key, Index),
+                                  Sequence...>{});
       } else {
-        return build_sequence<Key, Index + static_cast<Integral>(1), sequence_from_key(Key, Index),
-                              Sequence...>(cb, std::forward<Args>(args)...);
+        return build_sequence<Key, Index + static_cast<Integral>(1),
+                              sequence_from_key(Key, Index), Sequence...>(
+            cb, std::forward<Args>(args)...);
       }
     }
 
-
-#define PETRA_MAP_TO_SEQUENCE_RETURNS(K)                                        \
-  SequenceMap::build_sequence<K, static_cast<Integral>(0)>(                  \
+#define PETRA_MAP_TO_SEQUENCE_RETURNS(K)                                       \
+  SequenceMap::build_sequence<K, static_cast<Integral>(0)>(                    \
       cb, std::forward<std::decay_t<decltype(args)>>(args)...)
 
-    static constexpr auto map_to_seq = [](
-        auto&& i, auto& cb,
-        auto&&... args) PETRA_NOEXCEPT_CHECK(PETRA_MAP_TO_SEQUENCE_RETURNS(0)) {
-      using T = std::decay_t<decltype(i)>;
-      if constexpr (utilities::is_error_type<T>()) {
-        return cb(std::forward<T>(i),
-                  std::forward<std::decay_t<decltype(args)>>(args)...);
-      } else {
-        return PETRA_MAP_TO_SEQUENCE_RETURNS(T::value);
-      }
-    };
+    static constexpr auto map_to_seq =
+        [](auto&& i, auto& cb, auto&&... args)
+            PETRA_NOEXCEPT_CHECK(PETRA_MAP_TO_SEQUENCE_RETURNS(0)) {
+              using T = std::decay_t<decltype(i)>;
+              if constexpr (utilities::is_error_type<T>()) {
+                return cb(std::forward<T>(i),
+                          std::forward<std::decay_t<decltype(args)>>(args)...);
+              } else {
+                return PETRA_MAP_TO_SEQUENCE_RETURNS(T::value);
+              }
+            };
 
     static constexpr auto table = make_sequential_table<TotalSize>(map_to_seq);
 

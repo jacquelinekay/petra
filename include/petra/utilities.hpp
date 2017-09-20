@@ -104,9 +104,7 @@ namespace petra {
     template<typename T, typename = std::enable_if_t<std::is_integral<T>{}>>
     static constexpr auto pow(T base, T exp) {
       T result = 1;
-      while (exp-- > 0){
-        result *= base;
-      }
+      while (exp-- > 0) { result *= base; }
       return result;
     }
 

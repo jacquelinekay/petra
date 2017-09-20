@@ -16,9 +16,7 @@ namespace petra {
   // do I need a range concept?
   template<typename... T>
   struct ProductMap<std::tuple<T...>> {
-
     template<>
-    constexpr auto operator(std::tuple<T...>&& input) {
-    }
+    constexpr auto operator(std::tuple<T...>&& input) {}
   };
-}
+}  // namespace petra
