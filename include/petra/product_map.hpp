@@ -8,15 +8,23 @@
 
 namespace petra {
 
-  template<typename T>
+  template<typename T, auto OutputSize>
   struct ProductMap;
 
-  // Inputs: A set of constant templates in their order in the tuple
-  // and a set of ranges for those values
-  // do I need a range concept?
-  template<typename... T>
-  struct ProductMap<std::tuple<T...>> {
-    template<>
-    constexpr auto operator(std::tuple<T...>&& input) {}
+  // Product map is a multi-dimensional runtime to compile-time map.
+  // At compile time it accepts a closed set of compile-time input Constants.
+  // Its output range is the cartesian product of these values.
+  // You can specify N things in the input set and an output size of M.
+  template<typename... T, auto OutputSize>
+  struct ProductMap<std::tuple<T...>, OutputSize> {
+    static_assert((Constant<T>() && ...),
+        "Input types to ProductMap must be constants.");
+
+    template<typename ...InputT, typename = std::enable_if_t<(Constant<InputT>() && ...)>>
+    constexpr auto operator(std::tuple<InputT...>&& input) {
+      // Encode constant values to an integer index (hash?)
+      // Map the integer index into a sequence map
+      // Map to the constants 
+    }
   };
 }  // namespace petra

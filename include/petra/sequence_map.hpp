@@ -63,11 +63,11 @@ namespace petra {
       if constexpr (Index == Size - 1) {
         static_assert(sizeof...(Sequence) + 1 == Size);
         return PETRA_BUILD_SEQUENCE_RETURNS(
-            std::integer_sequence<Integral, sequence_from_key(Key, Index),
-                                  Sequence...>{});
+            std::integer_sequence<Integral, Sequence...,
+                                  sequence_from_key(Key, Index)>{});
       } else {
         return build_sequence<Key, Index + static_cast<Integral>(1),
-                              sequence_from_key(Key, Index), Sequence...>(
+                              Sequence..., sequence_from_key(Key, Index)>(
             cb, std::forward<Args>(args)...);
       }
     }

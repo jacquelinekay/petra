@@ -43,8 +43,8 @@ int main() {
 #endif
     m(test, test, std::make_index_sequence<sequence_size>{});
     // Error case
-    test[0] = 4;
-    m(test, test, std::make_index_sequence<sequence_size>{});
+    // test[0] = 4;
+    // m(test, test, std::make_index_sequence<sequence_size>{});
   }
 
   {
