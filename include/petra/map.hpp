@@ -56,7 +56,6 @@ namespace petra {
       return visitor_hash(key_hash(k), values, std::forward<Visitor>(visitor));
     }
 
-    // template<typename K>
     constexpr Expected<const char*, MapAccessStatus>
     key_at(std::size_t i) const {
       using E = Expected<const char*, MapAccessStatus>;

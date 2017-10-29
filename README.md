@@ -123,9 +123,12 @@ If these features sound useful or interesting to you, check out the `examples` f
 
 ## Roadmap
 
-- [ ] GCC support
-- [ ] C++14 support (probably using Hana backend)
-- [ ] Fuzz tests
+- [ ] Variant implementation
 - [ ] Update benchmark generation
+  - [ ] Deserialization
+  - [ ] Compiler AST
+  - [ ] State machine
+- [ ] C++14 support (probably using Hana backend)
+- [ ] Fuzz tests and more testing in general
 - [ ] Demonstrate more complicated "Constant" data structures
 - [ ] Support more string hash algorithms
